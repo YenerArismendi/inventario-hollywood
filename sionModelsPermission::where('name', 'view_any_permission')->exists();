@@ -1,0 +1,27 @@
+[90m= [39m[34;4mIlluminate\Support\Collection[39;24m {#7288
+    [34mall[39m: [
+      "[32mcrear usuarios[39m",
+      "[32mcreate_role[39m",
+      "[32mcreate_user[39m",
+      "[32mdelete_any_role[39m",
+      "[32mdelete_any_user[39m",
+      "[32mdelete_role[39m",
+      "[32mdelete_user[39m",
+      "[32meditar usuarios[39m",
+      "[32meliminar usuarios[39m",
+      "[32mforce_delete_any_user[39m",
+      "[32mforce_delete_user[39m",
+      "[32mreorder_user[39m",
+      "[32mreplicate_user[39m",
+      "[32mrestore_any_user[39m",
+      "[32mrestore_user[39m",
+      "[32mupdate_role[39m",
+      "[32mupdate_user[39m",
+      "[32mver usuarios[39m",
+      "[32mview_any_role[39m",
+      "[32mview_any_user[39m",
+      "[32mview_role[39m",
+      "[32mview_user[39m",
+    ],
+  }
+
