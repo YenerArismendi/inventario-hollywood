@@ -6,6 +6,7 @@ use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
 use Filament\Forms;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -34,13 +35,67 @@ class UserResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')->required(),
-                Forms\Components\TextInput::make('email')->required()->email(),
+                Select::make('tipo_documento')
+                    ->label('Tipo de documento')
+                    ->options([
+                        'CC' => 'Cédula de ciudadanía',
+                        'TI' => 'Tarjeta de identidad',
+                        'CE' => 'Cédula de extranjería',
+                        'NIT' => 'Número de Identificación Tributaria',
+                        'PA' => 'Pasaporte',
+                        'PEP' => 'Permiso Especial de Permanencia',
+                        'RC' => 'Registro civil',
+                        'NUIP' => 'Número Único de Identificación Personal',
+                        'MS' => 'Menor sin identificación',
+                    ])
+                    ->required()
+                    ->searchable(),
+                Forms\Components\TextInput::make('documento_identidad')->required()
+                    ->label('Número de documento'),
+                Forms\Components\TextInput::make('name')->required()
+                    ->label('Nombre completo'),
+                Forms\Components\TextInput::make('email')->required()
+                    ->label('Correo electronico')
+                    ->email(),
+                Forms\Components\TextInput::make('telefono')
+                    ->label('Número de telefono'),
+                Forms\Components\TextInput::make('ciudad')->required()
+                    ->label('Cidudad'),
+                Forms\Components\TextInput::make('direccion')
+                    ->label('Dirección'),
+                DatePicker::make('fecha_nacimiento')
+                    ->label('Fecha de nacimiento')
+                    ->displayFormat('d/m/Y')   // Formato que se muestra en el frontend
+                    ->native(false)
+                    ->closeOnDateSelection()   // Cierra automáticamente el selector al elegir una fecha
+                    ->maxDate(now())           // No permite fechas futuras
+                    ->required(),
+                Select::make('genero')
+                    ->label('Género')
+                    ->options([
+                        'Masculino' => 'Masculino',
+                        'Femenino' => 'Femenino',
+                        'Otro' => 'Otro',
+                    ])
+                    ->required()
+                    ->native(false),
+                Forms\Components\TextInput::make('cargo')->required()
+                    ->label('Cargo'),
                 Forms\Components\TextInput::make('password')
+                    ->label('Contraseña')
                     ->password()
                     ->required()
-                    ->dehydrateStateUsing(fn ($state) => bcrypt($state))
+                    ->dehydrateStateUsing(fn($state) => bcrypt($state))
                     ->visibleOn('create'),
+                Select::make('estado')
+                    ->label('Estado')
+                    ->options([
+                        1 => 'Activo',
+                        0 => 'Inactivo',
+                    ])
+                    ->required()
+                    ->native(false)
+                    ->default(1), // Opcional: estado por defecto
                 Select::make('roles')
                     ->relationship('roles', 'name')
                     ->multiple()
@@ -53,9 +108,60 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name'),
-                Tables\Columns\TextColumn::make('email'),
-                Tables\Columns\TextColumn::make('created_at')->dateTime(),
+                Tables\Columns\TextColumn::make('tipo_documento')
+                    ->label('Doc')
+                    ->limit(20)
+                    ->tooltip(fn ($record) => $record->tipo_documento),
+
+                Tables\Columns\TextColumn::make('documento_identidad')
+                    ->label('Documento de identidad')
+                    ->limit(20)
+                    ->tooltip(fn ($record) => $record->documento_identidad),
+
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Nombre completo')
+                    ->limit(20)
+                    ->tooltip(fn ($record) => $record->name),
+
+                Tables\Columns\TextColumn::make('email')
+                    ->label('Correo electrónico')
+                    ->limit(20)
+                    ->tooltip(fn ($record) => $record->email),
+
+                Tables\Columns\TextColumn::make('telefono')
+                    ->label('Teléfono')
+                    ->limit(15)
+                    ->tooltip(fn ($record) => $record->telefono),
+
+                Tables\Columns\TextColumn::make('ciudad')
+                    ->label('Ciudad')
+                    ->limit(20)
+                    ->tooltip(fn ($record) => $record->ciudad),
+
+                Tables\Columns\TextColumn::make('direccion')
+                    ->label('Dirección')
+                    ->limit(20)
+                    ->tooltip(fn ($record) => $record->direccion),
+
+                Tables\Columns\TextColumn::make('fecha_nacimiento')
+                    ->label('Fecha de nacimiento'),
+
+                Tables\Columns\TextColumn::make('genero')
+                    ->label('Género'),
+
+                Tables\Columns\TextColumn::make('cargo')
+                    ->label('Cargo')
+                    ->limit(20)
+                    ->tooltip(fn ($record) => $record->cargo),
+
+                Tables\Columns\TextColumn::make('estado')
+                    ->label('Estado'),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Fecha de creación')
+                    ->dateTime(),
+
+
             ])
             ->filters([
                 //

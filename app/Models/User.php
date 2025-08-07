@@ -26,6 +26,15 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'tipo_documento',
+        'documento_identidad',
+        'telefono',
+        'ciudad',
+        'direccion',
+        'fecha_nacimiento',
+        'genero',
+        'cargo',
+        'estado,',
     ];
 
     /**
@@ -50,4 +59,6 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+
 }
