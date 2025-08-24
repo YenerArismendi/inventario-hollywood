@@ -2,8 +2,6 @@
 
 namespace App\Helpers;
 
-use Illuminate\Support\Str;
-
 class PermissionHelper
 {
     public static function traducir(string $permission): string
@@ -15,23 +13,25 @@ class PermissionHelper
             'update' => 'Editar',
             'delete_any' => 'Eliminar todos',
             'delete' => 'Eliminar',
-            'force_delete_any' => 'Eliminar permanentemente todos',
-            'force_delete' => 'Eliminar permanentemente',
-            'restore_any' => 'Restaurar todos',
-            'restore' => 'Restaurar',
-            'replicate' => 'Duplicar',
-            'reorder' => 'Reordenar',
         ];
 
         foreach ($acciones as $key => $label) {
             if (str_starts_with($permission, $key)) {
                 $entidad = str_replace($key . '_', '', $permission);
-                return $label . ' ' . str_replace('_', ' ', $entidad);
+                $entidad = str_replace('_', ' ', $entidad);
+                return "{$label} " . ucfirst($entidad);
             }
         }
 
-        // Fallback si no matchea ningún prefijo
+        // Si no coincide, formatea el permiso crudo
         return ucfirst(str_replace('_', ' ', $permission));
     }
 
+    /**
+     * Traducir una lista de permisos.
+     */
+    public static function traducirLista(array $permissions): array
+    {
+        return array_map(fn ($permiso) => self::traducir($permiso), $permissions);
+    }
 }

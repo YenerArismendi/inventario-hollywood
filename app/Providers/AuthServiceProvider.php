@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Suppliers;
+use App\Policies\SuppliersPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Spatie\Permission\Models\Permission;
@@ -16,6 +18,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         Permission::class => PermissionPolicy::class,
+        Suppliers::class => SuppliersPolicy::class,
     ];
 
     /**
@@ -23,6 +26,6 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        $this->registerPolicies();
     }
 }

@@ -37,22 +37,24 @@ class RoleResource extends Resource
 
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                TextInput::make('name')
-                    ->label('Nombre del rol')
-                    ->required()
-                    ->unique(ignoreRecord: true),
+        return $form->schema([
+            Forms\Components\TextInput::make('name')
+                ->label('Nombre del rol')
+                ->required()
+                ->maxLength(255),
 
-                CheckboxList::make('permissions')
-                    ->label('Permisos')
-                    ->options(RoleHelper::groupedPermissions())
-                    ->relationship('permissions', 'name')
-                    ->columns(2)
-                    ->searchable()
-
-
-            ]);
+            Forms\Components\CheckboxList::make('permissions')
+                ->label('Permisos')
+                ->relationship('permissions', 'name')
+                ->options(function () {
+                    return Permission::all()
+                        ->pluck('name', 'id') // Clave = ID, Valor = Nombre
+                        ->mapWithKeys(function ($name, $id) {
+                            return [$id => \App\Helpers\PermissionHelper::traducir($name)];
+                        });
+                })
+                ->columns(2),
+        ]);
     }
 
     public static function table(Table $table): Table

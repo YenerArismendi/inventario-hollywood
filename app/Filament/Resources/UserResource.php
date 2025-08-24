@@ -53,15 +53,19 @@ class UserResource extends Resource
                 Forms\Components\TextInput::make('documento_identidad')->required()
                     ->label('Número de documento'),
                 Forms\Components\TextInput::make('name')->required()
-                    ->label('Nombre completo'),
+                    ->label('Nombre completo')
+                    ->afterStateUpdated(fn ($state, callable $set) => $set('name', strtolower($state))),
                 Forms\Components\TextInput::make('email')->required()
                     ->label('Correo electronico')
+                    ->afterStateUpdated(fn ($state, callable $set) => $set('email', strtolower($state)))
                     ->email(),
                 Forms\Components\TextInput::make('telefono')
                     ->label('Número de telefono'),
                 Forms\Components\TextInput::make('ciudad')->required()
+                    ->afterStateUpdated(fn ($state, callable $set) => $set('ciudad', strtolower($state)))
                     ->label('Cidudad'),
                 Forms\Components\TextInput::make('direccion')
+                    ->afterStateUpdated(fn ($state, callable $set) => $set('direccion', strtolower($state)))
                     ->label('Dirección'),
                 DatePicker::make('fecha_nacimiento')
                     ->label('Fecha de nacimiento')
@@ -80,6 +84,7 @@ class UserResource extends Resource
                     ->required()
                     ->native(false),
                 Forms\Components\TextInput::make('cargo')->required()
+                    ->afterStateUpdated(fn ($state, callable $set) => $set('cargo', strtolower($state)))
                     ->label('Cargo'),
                 Forms\Components\TextInput::make('password')
                     ->label('Contraseña')
