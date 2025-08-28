@@ -9,4 +9,13 @@ use Filament\Resources\Pages\CreateRecord;
 class CreatePermission extends CreateRecord
 {
     protected static string $resource = PermissionResource::class;
+
+    /**
+     * Sobrescribimos la URL de redirección después de una creación exitosa.
+     */
+    protected function getRedirectUrl(): string
+    {
+        // Forzamos la redirección a la página de listado (index).
+        return $this->getResource()::getUrl('index');
+    }
 }
