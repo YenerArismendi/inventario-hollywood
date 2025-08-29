@@ -8,6 +8,10 @@ use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvid
 use Illuminate\Support\Facades\Gate;
 use Spatie\Permission\Models\Permission;
 use App\Policies\PermissionPolicy;
+use App\Models\Bodega;
+use App\Models\Producto;
+use App\Policies\BodegaPolicy;
+use App\Policies\ProductoPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -19,6 +23,8 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         Permission::class => PermissionPolicy::class,
         Suppliers::class => SuppliersPolicy::class,
+        Bodega::class => BodegaPolicy::class,
+        Producto::class => ProductoPolicy::class,
     ];
 
     /**

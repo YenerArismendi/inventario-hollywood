@@ -54,18 +54,18 @@ class UserResource extends Resource
                     ->label('Número de documento'),
                 Forms\Components\TextInput::make('name')->required()
                     ->label('Nombre completo')
-                    ->afterStateUpdated(fn ($state, callable $set) => $set('name', strtolower($state))),
+                    ->afterStateUpdated(fn($state, callable $set) => $set('name', strtolower($state))),
                 Forms\Components\TextInput::make('email')->required()
                     ->label('Correo electronico')
-                    ->afterStateUpdated(fn ($state, callable $set) => $set('email', strtolower($state)))
+                    ->afterStateUpdated(fn($state, callable $set) => $set('email', strtolower($state)))
                     ->email(),
                 Forms\Components\TextInput::make('telefono')
                     ->label('Número de telefono'),
                 Forms\Components\TextInput::make('ciudad')->required()
-                    ->afterStateUpdated(fn ($state, callable $set) => $set('ciudad', strtolower($state)))
+                    ->afterStateUpdated(fn($state, callable $set) => $set('ciudad', strtolower($state)))
                     ->label('Cidudad'),
                 Forms\Components\TextInput::make('direccion')
-                    ->afterStateUpdated(fn ($state, callable $set) => $set('direccion', strtolower($state)))
+                    ->afterStateUpdated(fn($state, callable $set) => $set('direccion', strtolower($state)))
                     ->label('Dirección'),
                 DatePicker::make('fecha_nacimiento')
                     ->label('Fecha de nacimiento')
@@ -83,9 +83,16 @@ class UserResource extends Resource
                     ])
                     ->required()
                     ->native(false),
-                Forms\Components\TextInput::make('cargo')->required()
-                    ->afterStateUpdated(fn ($state, callable $set) => $set('cargo', strtolower($state)))
-                    ->label('Cargo'),
+                Select::make('cargo')
+                    ->label('Cargo')
+                    ->options([
+                        'administrador' => 'Administrador',
+                        'supervisor_bodega' => 'Supervisor de Bodega',
+                        'vendedor' => 'Vendedor',
+                        'transportista' => 'Transportista',
+                    ])
+                    ->required()
+                    ->native(false),
                 Forms\Components\TextInput::make('password')
                     ->label('Contraseña')
                     ->password()
@@ -103,9 +110,10 @@ class UserResource extends Resource
                     ->default(1), // Opcional: estado por defecto
                 Select::make('roles')
                     ->relationship('roles', 'name')
+                    ->label('Roles (Grupos de acceso)')
                     ->multiple()
                     ->preload()
-                    ->required()
+                    ->required(),
             ]);
     }
 
@@ -114,39 +122,39 @@ class UserResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('tipo_documento')
-                    ->label('Doc')
+                    ->label('Tipo Doc')
                     ->limit(20)
-                    ->tooltip(fn ($record) => $record->tipo_documento),
+                    ->tooltip(fn($record) => $record->tipo_documento),
 
                 Tables\Columns\TextColumn::make('documento_identidad')
                     ->label('Documento de identidad')
                     ->limit(20)
-                    ->tooltip(fn ($record) => $record->documento_identidad),
+                    ->tooltip(fn($record) => $record->documento_identidad),
 
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nombre completo')
                     ->limit(20)
-                    ->tooltip(fn ($record) => $record->name),
+                    ->tooltip(fn($record) => $record->name),
 
                 Tables\Columns\TextColumn::make('email')
                     ->label('Correo electrónico')
                     ->limit(20)
-                    ->tooltip(fn ($record) => $record->email),
+                    ->tooltip(fn($record) => $record->email),
 
                 Tables\Columns\TextColumn::make('telefono')
                     ->label('Teléfono')
                     ->limit(15)
-                    ->tooltip(fn ($record) => $record->telefono),
+                    ->tooltip(fn($record) => $record->telefono),
 
                 Tables\Columns\TextColumn::make('ciudad')
                     ->label('Ciudad')
                     ->limit(20)
-                    ->tooltip(fn ($record) => $record->ciudad),
+                    ->tooltip(fn($record) => $record->ciudad),
 
                 Tables\Columns\TextColumn::make('direccion')
                     ->label('Dirección')
                     ->limit(20)
-                    ->tooltip(fn ($record) => $record->direccion),
+                    ->tooltip(fn($record) => $record->direccion),
 
                 Tables\Columns\TextColumn::make('fecha_nacimiento')
                     ->label('Fecha de nacimiento'),
@@ -157,7 +165,7 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('cargo')
                     ->label('Cargo')
                     ->limit(20)
-                    ->tooltip(fn ($record) => $record->cargo),
+                    ->tooltip(fn($record) => $record->cargo),
 
                 Tables\Columns\TextColumn::make('estado')
                     ->label('Estado'),
