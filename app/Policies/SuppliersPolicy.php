@@ -39,7 +39,7 @@ class SuppliersPolicy
      */
     public function update(User $user, Suppliers $suppliers): bool
     {
-        return $user->can('edit_suppliers');
+        return $user->can('update_suppliers');
     }
 
     /**

@@ -165,8 +165,6 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Fecha de creación')
                     ->dateTime(),
-
-
             ])
             ->filters([
                 //

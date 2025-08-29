@@ -1,0 +1,59 @@
++Forma de agregar controladores para gestionar ventanas, mensajes y rutas
+*sail artisan make:controller (namecontrolador) -r || Colocarle al nombre Controller al final para saber que es un controlador
+
++Forma para ingresar a mysql desde consola y ingresar como root
+->ingresar la contenedor
+*docker exec -it nombre_del_contenedor bash
+->ingresar a mysql como usuario root
+*mysql -u root -p
+->Forma de reiniciar el auto_increment de una table
+*ALTER TABLE nombre_tabla AUTO_INCREMENT = 1;
+
++Codigo para compilar y generar los assets de css y js
+*sail npm run dev
+
++migraciones
+->para correr migraciones
+*sail artisan migrate
+->para debolver cambios
+*sail artisan migrate:rollback
+->para actualizar migraciones
+*sail artisan migrate:refresh (se ejecuta los metodos down) y vuelve a correr migraciones
+->forma de eliminar todas las tablas y volver a correr migraciones
+*sail artisan migrate:fresh
+->Forma de agregar campos a una tabla
+*sail artisan make:migration Nombre de la migracion, segun campos a agg(add_qr_path_to_mesas_table) --table=mesas(Nombre de la tabla)
+
+
+ +Forma de crear migraciones
+->migracion normal
+    *sail artisan make:migration (nombre de la migracion)
+->migracion para ayudas con codigo de creacion
+    *sail artisan make:migration create_(nombre de la migracion)_table
+->para agregar campos a una tabla ya creada
+    *sail artisan make:migration add_(nombre_del_campo)_to_(nombre_tabla)_table
+->para modificar un campo de la bd
+     *sail artisan make:migration update_precio_column_in_tablename --table=tablename (despues se ejecuta aritisan migrate)
+ ->Para eliminar un campo de la bd
+     *sail artisan make:migration drop_precio_column_in_tablename --table=tablename (despues se ejecuta aritisan migrate)
+
++Forma de insertar datos a la bd
+->se realiza por medio de Eloquent forma de interactuar con la bd desde laravel
+->el Eloquent se realiza por medio de los modelos
+*sail artisan make:model (nombre del modelo)
+
++Metodos para la comunicación entre el clientes y el servidor
+->GET: para obtener datos
+->POST: para enviar datos
+->PUT: para actualizar datos
+->DELETE: para eliminar datos
+
+
++Forma de crear modulos con filament
+->Crear modelo y migración con
+	*sail artisan make:model (Nombre-modelo) -m
+*sail artisan make:filament-resource (Se coloca el modelo creado)
+*php artisan make:policy NombrePolicy --model=Nombre para crear las políticas de restricción para los modulos.
+
+
+

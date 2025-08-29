@@ -98,4 +98,6 @@ return [
 
     'system_route_prefix' => 'filament',
 
+    'locale' => 'es',
+
 ];
