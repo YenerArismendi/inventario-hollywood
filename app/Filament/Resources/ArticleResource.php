@@ -8,6 +8,8 @@ use App\Helpers\ProductHelper;
 use App\Models\Article;
 use App\Models\Suppliers;
 use Filament\Forms;
+use Filament\Forms\Components\Fieldset;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -53,7 +55,9 @@ class ArticleResource extends Resource
                     ->label('Descripcion')
                     ->afterStateUpdated(fn($state, callable $set) => $set('descripcion', strtolower($state))),
                 Forms\Components\TextInput::make('precio')
-                    ->label('Precio'),
+                    ->label('Precio')
+                    ->numeric()
+                    ->suffix('COP'),
                 Forms\Components\Select::make('unidad_medida')
                     ->options([
                         'kilo' => 'Kilo',
@@ -95,6 +99,28 @@ class ArticleResource extends Resource
                 Forms\Components\TextInput::make('codigo')
                     ->label('Código del producto')
                     ->readOnly(), // Para que no lo editen manualmente
+                Repeater::make('variantes')
+                    ->relationship()
+                    ->schema([
+                        Fieldset::make('Información de la variante')
+                            ->schema([
+                                TextInput::make('nombre')
+                                    ->label('Nombre de la variante')
+                                    ->placeholder('Ej: Color rojo')
+                                    ->required(),
+
+                                TextInput::make('descripcion')
+                                    ->label('Descripción')
+                                    ->placeholder('Descripción breve')
+                                    ->required(),
+                            ]),
+                    ])
+                    ->columns(2)
+                    ->createItemButtonLabel('Agregar variante')
+                    ->defaultItems(0) // Empieza vacío, sin variantes creadas
+                    ->createItemButtonLabel('➕ Agregar nueva variante')
+                    ->itemLabel(fn(array $state): ?string => $state['nombre'] ?? 'Variante sin nombre') // Muestra el nombre como título del item
+
             ]);
     }
 

@@ -15,4 +15,10 @@ class Article extends Model
     {
         return $this->belongsTo(Suppliers::class, 'proveedor_id');
     }
+
+    public function variantes()
+    {
+        return $this->hasMany(Variante::class);
+    }
+
 }
