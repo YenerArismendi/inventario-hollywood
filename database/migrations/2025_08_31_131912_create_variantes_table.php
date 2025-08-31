@@ -14,8 +14,10 @@ return new class extends Migration
         Schema::create('variantes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('article_id')->constrained()->onDelete('cascade'); // Relación con artículos
-            $table->string('nombre'); // Ej: Talla M, Color Azul
-            $table->string('descripcion')->nullable(); // Si quieres código propio por variante
+            $table->string('medida')->nullable(); // Ej: cantidad ya sea en peso o en litros, solo para referencia
+            $table->string('color')->nullable(); // Ej: Color del material
+            $table->string('material')->nullable(); // Ej: Tipo del material
+            $table->string('calidad')->nullable(); // Ej: Tipo del material
             $table->timestamps();
         });
 

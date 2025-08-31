@@ -9,7 +9,7 @@ class Article extends Model
 
     protected $table = 'articles';
     protected $primaryKey = 'id';
-    protected $fillable = ['nombre', 'tipo', 'codigo', 'descripcion', 'precio', 'unidad_medida', 'imagen', 'estado', 'proveedor_id'];
+    protected $fillable = ['nombre', 'tipo', 'codigo', 'descripcion', 'precio', 'unidad_medida', 'imagen', 'estado', 'temporada', 'proveedor_id'];
     // Relación con proveedor
     public function proveedor()
     {

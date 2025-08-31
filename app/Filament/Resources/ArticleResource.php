@@ -85,7 +85,24 @@ class ArticleResource extends Resource
             Forms\Components\TextInput::make('codigo')
                 ->label('Código del producto')
                 ->readOnly(),
-
+            Forms\Components\Select::make('temporada')
+                ->label('Temporada de ventas')
+                ->options([
+                    'enero_rebajas' => 'Enero – Rebajas de inicio de año',
+                    'febrero_san_valentin' => 'Febrero – San Valentín',
+                    'marzo_dia_mujer' => 'Marzo – Día de la Mujer',
+                    'abril_semana_santa' => 'Abril – Semana Santa',
+                    'mayo_dia_madre' => 'Mayo – Día de la Madre',
+                    'junio_padre_midyear' => 'Junio – Día del Padre / Mitad de año',
+                    'julio_festivo' => 'Julio – Festivos de mitad de año',
+                    'agosto_regreso_clases' => 'Agosto – Regreso a clases',
+                    'septiembre_amor_amistad' => 'Septiembre – Amor y Amistad',
+                    'octubre_halloween' => 'Octubre – Halloween',
+                    'noviembre_black_friday' => 'Noviembre – Black Friday / Cyber Lunes',
+                    'diciembre_navidad' => 'Diciembre – Navidad y Fin de año',
+                ])
+                ->searchable()
+                ->placeholder('Selecciona una temporada')
         ]);
     }
 

@@ -18,8 +18,9 @@ return new class extends Migration {
             $table->text('descripcion')->nullable(); // Descripción detallada
             $table->decimal('precio', 10, 2)->nullable(); // Precio base o de referencia
             $table->string('unidad_medida')->nullable(); // Unidad (kg, unidad, litro, caja, etc.)
-                $table->string('imagen')->nullable(); // Ruta a imagen principal
+            $table->string('imagen')->nullable(); // Ruta a imagen principal
             $table->boolean('estado')->default(true); // Estado (activo/inactivo)
+            $table->string('temporada')->nullable(); //Para saber en que temporada es mas fuerte el producto
 
             $table->foreignId('proveedor_id')
                 ->nullable()

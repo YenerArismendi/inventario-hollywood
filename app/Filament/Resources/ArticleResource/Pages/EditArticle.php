@@ -38,14 +38,24 @@ class EditArticle extends EditRecord
                 ->modalHeading('Crear nueva variante')
                 ->modalSubmitActionLabel('Guardar')
                 ->form([
-                    Forms\Components\TextInput::make('nombre')
-                        ->label('Nombre de la variante')
+                    Forms\Components\TextInput::make('medida')
+                        ->label('Medida')
                         ->required()
                         ->maxLength(50),
 
-                    Forms\Components\TextInput::make('descripcion')
-                        ->label('Descripción')
-                        ->maxLength(150),
+                    Forms\Components\TextInput::make('color')
+                        ->label('Color')
+                        ->maxLength(50),
+                    Forms\Components\TextInput::make('material')
+                        ->label('Material')
+                        ->maxLength(50),
+                    Forms\Components\Select::make('calidad')
+                        ->label('Calidad')
+                        ->options([
+                            'alta' => 'Alta',
+                            'mediana' => 'Mediana',
+                            'baja' => 'Baja',
+                        ])
                 ])
                 ->action(function (array $data): void {
                     $this->record->variantes()->create($data);
