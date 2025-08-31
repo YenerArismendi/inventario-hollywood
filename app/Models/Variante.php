@@ -9,7 +9,7 @@ class Variante extends Model
 
     Protected $table = 'variantes';
     Protected $primaryKey = 'id';
-    Protected $fillable = ['nombre', 'descripcion'];
+    Protected $fillable = ['nombre', 'descripcion', 'article_id'];
 
     public function article()
     {
