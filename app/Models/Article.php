@@ -13,6 +13,6 @@ class Article extends Model
     // Relación con proveedor
     public function proveedor()
     {
-        return $this->belongsTo(Suppliers::class, 'id');
+        return $this->belongsTo(Suppliers::class, 'proveedor_id');
     }
 }
