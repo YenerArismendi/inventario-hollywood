@@ -2,15 +2,13 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Widgets\BodegaSelector;
-use Filament\Http\Middleware\Authenticate;
+use App\Filament\TopbarWidgets\BodegaSelectorTopbar;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Navigation\NavigationItem;
 use Filament\Pages;
-use Filament\Pages\Auth\Login;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -30,13 +28,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->widgets([
-                BodegaSelector::class, // Aquí se registra
-            ])
             ->login()
-            ->widgets([
-                \App\Filament\Widgets\BodegaSelector::class,
-            ])
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -49,6 +41,7 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
+//                \App\Filament\Widgets\ProductosWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -68,10 +61,6 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->sidebarCollapsibleOnDesktop()
-            ->brandName('HOLLYWOOD');// <-- agrega esta línea
-
-
+            ->brandName('HOLLYWOOD');
     }
-
-
 }
