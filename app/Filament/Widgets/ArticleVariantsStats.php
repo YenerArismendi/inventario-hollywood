@@ -2,30 +2,31 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Article;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use App\Models\Variante;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Tables\Contracts\HasTable;
-use Filament\Widgets\Concerns\InteractsWithPageTable;
-use Filament\Resources\Pages\Concerns\InteractsWithRecord;
-
 
 class ArticleVariantsStats extends BaseWidget
 {
+    public ?Article $record = null;
 
-    use InteractsWithRecord;
+    protected static ?string $pollingInterval = null;
 
-    protected function getStats(): array
+    public static function canView(): bool
     {
-        $article = $this->getRecord();
-        $count = $article ? Variante::where('article_id', $article->id)->count() : 0;
+        return true;
+    }
+
+    public function getStats(): array
+    {
+        if (! $this->record) {
+            return [];
+        }
 
         return [
-            Stat::make('Variantes', $count)
-                ->description('Asociadas a este artículo')
+            Stat::make('Variantes', $this->record->variants()->count())
+                ->description('Número de variantes del artículo')
                 ->icon('heroicon-o-rectangle-stack'),
         ];
     }
 }
-

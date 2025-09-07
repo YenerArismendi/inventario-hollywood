@@ -114,6 +114,11 @@ class UserResource extends Resource
                     ->multiple()
                     ->preload()
                     ->required(),
+                Forms\Components\Select::make('bodegas')
+                    ->label('Bodegas asignadas')
+                    ->relationship('bodegas', 'nombre') // Relación definida en el modelo User
+                    ->multiple()
+                    ->searchable(),
             ]);
     }
 

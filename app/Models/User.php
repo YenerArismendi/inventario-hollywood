@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -25,6 +26,7 @@ class User extends Authenticatable
         'genero',
         'cargo',
         'estado',
+        'active_bodega_id'
     ];
 
     protected $hidden = [
@@ -42,8 +44,18 @@ class User extends Authenticatable
     /**
      * Obtiene la bodega asignada al usuario.
      */
-    public function bodega(): BelongsTo
+    public function bodegas(): BelongsToMany
     {
-        return $this->belongsTo(Bodega::class);
+        return $this->belongsToMany(Bodega::class, 'bodega_user');
+    }
+
+//    public function bodega()
+//    {
+//        return $this->belongsToMany(\App\Models\Bodega::class, );
+//    }
+
+    public function activeBodega()
+    {
+        return $this->belongsTo(Bodega::class, 'active_bodega_id');
     }
 }

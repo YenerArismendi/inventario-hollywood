@@ -11,6 +11,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use App\Filament\Widgets\ArticleVariantsStats;
+use Illuminate\Database\Eloquent\Builder;
 
 class ArticleResource extends Resource
 {
@@ -21,6 +22,7 @@ class ArticleResource extends Resource
     {
         return 'Artículos';
     }
+    protected $listeners = ['refresh' => '$refresh'];
 
     public static function form(Form $form): Form
     {
@@ -102,7 +104,11 @@ class ArticleResource extends Resource
                     'diciembre_navidad' => 'Diciembre – Navidad y Fin de año',
                 ])
                 ->searchable()
-                ->placeholder('Selecciona una temporada')
+                ->placeholder('Selecciona una temporada'),
+            Forms\Components\Select::make('bodega_id')
+                ->relationship('bodega', 'nombre')
+                ->default(auth()->user()->bodega_id)
+                ->required(),
         ]);
     }
 
@@ -133,6 +139,18 @@ class ArticleResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        // Si el usuario está autenticado, filtramos por la bodega activa
+        if (auth()->check() && auth()->user()->active_bodega_id) {
+            $query->where('bodega_id', auth()->user()->active_bodega_id);
+        }
+
+        return $query;
     }
 
     public static function getRelations(): array

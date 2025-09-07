@@ -9,7 +9,7 @@ class Article extends Model
 
     protected $table = 'articles';
     protected $primaryKey = 'id';
-    protected $fillable = ['nombre', 'tipo', 'codigo', 'descripcion', 'precio', 'unidad_medida', 'imagen', 'estado', 'temporada', 'proveedor_id'];
+    protected $fillable = ['nombre', 'tipo', 'codigo', 'descripcion', 'precio', 'unidad_medida', 'imagen', 'estado', 'temporada', 'proveedor_id', 'bodega_id'];
     // Relación con proveedor
     public function proveedor()
     {
@@ -19,6 +19,12 @@ class Article extends Model
     public function variantes()
     {
         return $this->hasMany(Variante::class);
+    }
+
+//    Relacion para asignar un articulo a cada bodega
+    public function bodega()
+    {
+        return $this->belongsTo(Bodega::class);
     }
 
 }

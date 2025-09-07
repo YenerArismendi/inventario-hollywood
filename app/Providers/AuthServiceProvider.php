@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Suppliers;
+use App\Models\User;
 use App\Policies\SuppliersPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
@@ -33,5 +34,10 @@ class AuthServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerPolicies();
+    }
+
+    public function view(User $user, Bodega $bodega): bool
+    {
+        return $user->bodegas->contains($bodega->id);
     }
 }

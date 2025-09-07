@@ -2,11 +2,13 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Widgets\BodegaSelector;
 use Filament\Http\Middleware\Authenticate;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationItem;
 use Filament\Pages;
 use Filament\Pages\Auth\Login;
 use Filament\Panel;
@@ -28,7 +30,13 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            ->widgets([
+                BodegaSelector::class, // Aquí se registra
+            ])
             ->login()
+            ->widgets([
+                \App\Filament\Widgets\BodegaSelector::class,
+            ])
             ->colors([
                 'primary' => Color::Amber,
             ])
