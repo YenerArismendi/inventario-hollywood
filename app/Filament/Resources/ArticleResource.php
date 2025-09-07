@@ -144,13 +144,14 @@ class ArticleResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery();
+        $bodega_id = auth()->user()->active_bodega_id;
 
-        // Si el usuario está autenticado, filtramos por la bodega activa
-        if (auth()->check() && auth()->user()->active_bodega_id) {
-            $query->where('bodega_id', auth()->user()->active_bodega_id);
+        if ($bodega_id) {
+            return $query->where('bodega_id', $bodega_id);
         }
 
-        return $query;
+        // Si no hay bodega activa, no devolver nada
+        return $query->whereRaw('0 = 1');
     }
 
     public static function getRelations(): array

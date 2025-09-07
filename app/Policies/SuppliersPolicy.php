@@ -50,6 +50,11 @@ class SuppliersPolicy
         return $user->can('delete_suppliers');
     }
 
+    public function deleteAny(User $user): bool
+    {
+        return $user->can('delete_any_suppliers');
+    }
+
     /**
      * Determine whether the user can restore the model.
      */

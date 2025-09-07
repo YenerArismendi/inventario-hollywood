@@ -6,14 +6,14 @@ use App\Models\Article;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
-class ArticlePolice
+class ArticlePolicy
 {
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->can('view_any_article');
     }
 
     /**
@@ -21,7 +21,7 @@ class ArticlePolice
      */
     public function view(User $user, Article $article): bool
     {
-        return false;
+        return $user->can('view_article');
     }
 
     /**
@@ -29,7 +29,7 @@ class ArticlePolice
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->can('create_article');
     }
 
     /**
@@ -37,7 +37,7 @@ class ArticlePolice
      */
     public function update(User $user, Article $article): bool
     {
-        return false;
+        return $user->can('update_article');
     }
 
     /**
@@ -45,7 +45,12 @@ class ArticlePolice
      */
     public function delete(User $user, Article $article): bool
     {
-        return false;
+        return $user->can('delete_article');
+    }
+
+    public function deleteAny(User $user): bool
+    {
+        return $user->can('delete_any_article');
     }
 
     /**
@@ -53,7 +58,7 @@ class ArticlePolice
      */
     public function restore(User $user, Article $article): bool
     {
-        return false;
+        return $user->can('restore_article');
     }
 
     /**
@@ -61,6 +66,6 @@ class ArticlePolice
      */
     public function forceDelete(User $user, Article $article): bool
     {
-        return false;
+        return $user->can('force_delete_article');
     }
 }

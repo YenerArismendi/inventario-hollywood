@@ -118,6 +118,7 @@ class UserResource extends Resource
                     ->label('Bodegas asignadas')
                     ->relationship('bodegas', 'nombre') // Relación definida en el modelo User
                     ->multiple()
+                    ->preload()
                     ->searchable(),
             ]);
     }

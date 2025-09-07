@@ -14,26 +14,54 @@ class BodegaSelector extends Widget implements HasForms
 
     protected static string $view = 'filament.widgets.bodega-selector-widget';
 
+    // Variable que guarda la bodega actualmente seleccionada en el widget
     public ?int $bodega_id = null;
 
+    /**
+     * Decide si el widget se muestra.
+     * Solo se muestra si el usuario tiene más de una bodega asociada.
+     */
     public static function canView(): bool
     {
         $user = auth()->user();
 
-        if (! $user) {
-            return false; // No mostrar si no está autenticado
+        if (!$user) {
+            return false;
         }
 
-        // Mostrar solo si el usuario tiene más de una bodega asociada
         return $user->bodegas()->count() > 1;
     }
 
+    /**
+     * Se ejecuta al montar el widget.
+     * Valida la bodega activa del usuario y la asigna automáticamente si es necesario.
+     */
     public function mount(): void
     {
-        // Cargar la bodega activa actual del usuario
-        $this->bodega_id = auth()->user()->active_bodega_id;
+        $user = auth()->user();
+
+        // Obtener IDs de las bodegas asociadas al usuario a través de la relación
+        $bodegaIds = $user->bodegas()->pluck('bodegas.id');
+
+        // Si la bodega activa no es válida o es nula
+        if (!$user->active_bodega_id || ! $bodegaIds->contains($user->active_bodega_id)) {
+            if ($bodegaIds->count() > 0) {
+                // Asignar la primera bodega que encuentre
+                $user->active_bodega_id = $bodegaIds->first();
+            } else {
+                // Si no tiene ninguna bodega, dejar nulo
+                $user->active_bodega_id = null;
+            }
+            $user->save();
+        }
+
+        // Asignar la bodega activa al widget
+        $this->bodega_id = $user->active_bodega_id;
     }
 
+    /**
+     * Define el formulario del widget (selector de bodega)
+     */
     public function form(Forms\Form $form): Forms\Form
     {
         return $form
@@ -50,15 +78,12 @@ class BodegaSelector extends Widget implements HasForms
                     ->reactive()
                     ->afterStateUpdated(function ($state) {
                         $user = auth()->user();
-
-                        if ($user) {
-                            // Guardar automáticamente la bodega seleccionada en la tabla users
-                            $user->update(['active_bodega_id' => $state]);
-
-                            // Forzar que Filament/Livewire refresque los datos dependientes (como artículos)
+                        if ($user && $user->bodegas()->pluck('bodegas.id')->contains($state)) {
+                            $user->active_bodega_id = $state;
+                            $user->save();
                             $this->dispatch('refresh');
                         }
-                    }),
+                    })
             ]);
     }
 }
