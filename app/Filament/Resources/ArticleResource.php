@@ -22,6 +22,7 @@ class ArticleResource extends Resource
     {
         return 'Artículos';
     }
+
     protected $listeners = ['refresh' => '$refresh'];
 
     public static function form(Form $form): Form
@@ -36,7 +37,7 @@ class ArticleResource extends Resource
                         $set('codigo', $codigo);
                     }
                 })
-                ->afterStateUpdated(fn ($state, callable $set) => $set('nombre', strtolower($state))), // ← corregido
+                ->afterStateUpdated(fn($state, callable $set) => $set('nombre', strtolower($state))), // ← corregido
             Forms\Components\Select::make('tipo')
                 ->options([
                     'producto' => 'Producto',
@@ -126,6 +127,10 @@ class ArticleResource extends Resource
                 Tables\Columns\TextColumn::make('precio')->label('Precio'),
                 Tables\Columns\TextColumn::make('unidad_medida')->label('Unidad'),
                 Tables\Columns\TextColumn::make('proveedor.name')->label('Proveedor'),
+                Tables\Columns\TextColumn::make('bodega.nombre')
+                    ->label('Bodega')
+                    ->limit(20)
+                    ->tooltip(fn($record) => $record->bodega?->nombre),
                 Tables\Columns\TextColumn::make('variantes_count')
                     ->label('Variantes')
                     ->counts('variantes'), // <-- Esto usa withCount en la relación
@@ -141,17 +146,24 @@ class ArticleResource extends Resource
             ]);
     }
 
+
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
-        $bodega_id = auth()->user()->active_bodega_id;
+        $user = auth()->user();
 
-        if ($bodega_id) {
-            return $query->where('bodega_id', $bodega_id);
+        $query = parent::getEloquentQuery();
+
+        // Si NO tiene el rol de 'admin', filtrar por la bodega activa
+        if (!$user->hasRole('admin')) {
+            if ($user->active_bodega_id) {
+                $query->where('bodega_id', $user->active_bodega_id);
+            } else {
+                // Si no tiene bodega activa, no mostrar artículos
+                $query->whereRaw('0 = 1');
+            }
         }
 
-        // Si no hay bodega activa, no devolver nada
-        return $query->whereRaw('0 = 1');
+        return $query;
     }
 
     public static function getRelations(): array
