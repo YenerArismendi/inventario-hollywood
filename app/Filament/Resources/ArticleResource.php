@@ -36,8 +36,8 @@ class ArticleResource extends Resource
                         $codigo = \App\Helpers\ProductHelper::generarCodigoProducto($state);
                         $set('codigo', $codigo);
                     }
-                })
-                ->afterStateUpdated(fn($state, callable $set) => $set('nombre', strtolower($state))), // ← corregido
+                }),
+//                ->afterStateUpdated(fn($state, callable $set) => $set('nombre', strtolower($state))), // ← corregido
             Forms\Components\Select::make('tipo')
                 ->options([
                     'producto' => 'Producto',
@@ -110,6 +110,10 @@ class ArticleResource extends Resource
                 ->relationship('bodega', 'nombre')
                 ->default(auth()->user()->bodega_id)
                 ->required(),
+            Forms\Components\DatePicker::make('fecha_caducidad')
+                ->label('Fecha de caducidad')
+                ->native(false) // Usa el calendario de Flatpickr en vez del nativo del navegador
+                ->displayFormat('d/m/Y') // Formato de visualización
         ]);
     }
 
@@ -121,11 +125,16 @@ class ArticleResource extends Resource
                     ->label('Nombre')
                     ->limit(20)
                     ->tooltip(fn($record) => $record->nombre),
-                Tables\Columns\TextColumn::make('tipo')->label('Tipo'),
-                Tables\Columns\TextColumn::make('codigo')->label('Código'),
-                Tables\Columns\TextColumn::make('descripcion')->label('Descripción')->limit(20),
-                Tables\Columns\TextColumn::make('precio')->label('Precio'),
-                Tables\Columns\TextColumn::make('unidad_medida')->label('Unidad'),
+                Tables\Columns\TextColumn::make('tipo')->label('Tipo')
+                    ->tooltip(fn($record) => $record->tipo),
+                Tables\Columns\TextColumn::make('codigo')->label('Código')
+                    ->tooltip(fn($record) => $record->codigo),
+                Tables\Columns\TextColumn::make('descripcion')->label('Descripción')->limit(20)
+                    ->tooltip(fn($record) => $record->descripcion),
+                Tables\Columns\TextColumn::make('precio')->label('Precio')
+                    ->tooltip(fn($record) => $record->precio),
+                Tables\Columns\TextColumn::make('unidad_medida')->label('Unidad')
+                    ->tooltip(fn($record) => $record->unidad_medida),
                 Tables\Columns\TextColumn::make('proveedor.name')->label('Proveedor'),
                 Tables\Columns\TextColumn::make('bodega.nombre')
                     ->label('Bodega')
@@ -133,7 +142,10 @@ class ArticleResource extends Resource
                     ->tooltip(fn($record) => $record->bodega?->nombre),
                 Tables\Columns\TextColumn::make('variantes_count')
                     ->label('Variantes')
+                    ->tooltip(fn($record) => $record->variantes_count)
                     ->counts('variantes'), // <-- Esto usa withCount en la relación
+                Tables\Columns\TextColumn::make('fecha_caducidad')
+                    ->tooltip(fn($record) => $record->fecha_caducidad),
             ])
             ->filters([])
             ->actions([

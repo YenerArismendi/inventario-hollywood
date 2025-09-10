@@ -12,7 +12,7 @@ class Article extends Model
     use HasRoles, HasFactory, Notifiable;
     protected $table = 'articles';
     protected $primaryKey = 'id';
-    protected $fillable = ['nombre', 'tipo', 'codigo', 'descripcion', 'precio', 'unidad_medida', 'imagen', 'estado', 'temporada', 'proveedor_id', 'bodega_id'];
+    protected $fillable = ['nombre', 'tipo', 'codigo', 'descripcion', 'precio', 'unidad_medida', 'imagen', 'estado', 'temporada', 'proveedor_id', 'bodega_id', 'fecha_caducidad'];
     // Relación con proveedor
     public function proveedor()
     {
