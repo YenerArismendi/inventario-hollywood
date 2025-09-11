@@ -26,7 +26,6 @@ class User extends Authenticatable
         'genero',
         'cargo',
         'estado',
-        'active_bodega_id'
     ];
 
     protected $hidden = [
@@ -49,13 +48,18 @@ class User extends Authenticatable
         return $this->belongsToMany(Bodega::class, 'bodega_user');
     }
 
-//    public function bodega()
-//    {
-//        return $this->belongsToMany(\App\Models\Bodega::class, );
-//    }
-
-    public function activeBodega()
+    public function ventas()
     {
-        return $this->belongsTo(Bodega::class, 'active_bodega_id');
+        return $this->hasMany(Venta::class);
+    }
+
+    public function sesionesCaja()
+    {
+        return $this->hasMany(SesionCaja::class);
+    }
+
+    public function sesionCajaActiva()
+    {
+        return $this->hasOne(SesionCaja::class)->where('estado', 'abierta');
     }
 }

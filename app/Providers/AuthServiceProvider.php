@@ -9,10 +9,12 @@ use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvid
 use Illuminate\Support\Facades\Gate;
 use Spatie\Permission\Models\Permission;
 use App\Policies\PermissionPolicy;
-use App\Models\Bodega;
-use App\Models\Producto;
+use App\Models\{Bodega, Caja, Cliente, SesionCaja, Venta};
 use App\Policies\BodegaPolicy;
-use App\Policies\ProductoPolicy;
+use App\Policies\CajaPolicy;
+use App\Policies\ClientePolicy;
+use App\Policies\SesionCajaPolicy;
+use App\Policies\VentaPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -25,7 +27,10 @@ class AuthServiceProvider extends ServiceProvider
         Permission::class => PermissionPolicy::class,
         Suppliers::class => SuppliersPolicy::class,
         Bodega::class => BodegaPolicy::class,
-        Producto::class => ProductoPolicy::class,
+        Cliente::class => ClientePolicy::class,
+        Caja::class => CajaPolicy::class,
+        SesionCaja::class => SesionCajaPolicy::class,
+        Venta::class => VentaPolicy::class,
     ];
 
     /**
@@ -34,10 +39,5 @@ class AuthServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerPolicies();
-    }
-
-    public function view(User $user, Bodega $bodega): bool
-    {
-        return $user->bodegas->contains($bodega->id);
     }
 }

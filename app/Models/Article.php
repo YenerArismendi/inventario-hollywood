@@ -4,15 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Traits\HasRoles;
+
 
 class Article extends Model
 {
-    use HasRoles, HasFactory, Notifiable;
+    use HasFactory;
     protected $table = 'articles';
     protected $primaryKey = 'id';
-    protected $fillable = ['nombre', 'tipo', 'codigo', 'descripcion', 'precio', 'unidad_medida', 'imagen', 'estado', 'temporada', 'proveedor_id', 'bodega_id'];
+    protected $fillable = ['nombre', 'tipo', 'codigo', 'descripcion', 'precio', 'unidad_medida', 'imagen', 'estado', 'temporada', 'proveedor_id'];
     // Relación con proveedor
     public function proveedor()
     {
@@ -24,10 +23,14 @@ class Article extends Model
         return $this->hasMany(Variante::class);
     }
 
-//    Relacion para asignar un articulo a cada bodega
-    public function bodega()
+    /**
+     * Un artículo puede estar en muchas bodegas, con un stock específico en cada una.
+     */
+    public function bodegas()
     {
-        return $this->belongsTo(Bodega::class);
+        return $this->belongsToMany(Bodega::class, 'bodega_article')
+            ->withPivot('stock') // ¡Importante para acceder al stock!
+            ->withTimestamps();
     }
 
 }

@@ -30,21 +30,34 @@ class Bodega extends Model
 //        return $this->hasMany(User::class);
 //    }
 
-    /**
-     * Una Bodega tiene un inventario de muchos Productos.
-     */
-    public function productos(): BelongsToMany
-    {
-        return $this->belongsToMany(Producto::class, 'bodega_producto')->withPivot('cantidad')->withTimestamps();
-    }
-
     public function users()
     {
         return $this->belongsToMany(User::class, 'bodega_user');
     }
 
-    public function articles()
+    /**
+     * Una Bodega tiene un inventario de muchos Artículos a través de una tabla pivote.
+     */
+    public function articles(): BelongsToMany
     {
-        return $this->hasMany(Article::class);
+        return $this->belongsToMany(Article::class, 'bodega_article')
+            ->withPivot('stock') // ¡Crucial para acceder a la cantidad de stock!
+            ->withTimestamps();
+    }
+
+    /**
+     * Una Bodega puede tener muchas Cajas de venta.
+     */
+    public function cajas(): HasMany
+    {
+        return $this->hasMany(Caja::class);
+    }
+
+    /**
+     * En una Bodega se pueden registrar muchas Ventas.
+     */
+    public function ventas(): HasMany
+    {
+        return $this->hasMany(Venta::class);
     }
 }

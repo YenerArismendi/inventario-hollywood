@@ -48,6 +48,9 @@ class RolesAndPermissionsSeeder extends Seeder
             }
         }
 
+        // --- Permisos Personalizados ---
+        Permission::firstOrCreate(['name' => 'change_bodega']);
+
         // Crear o encontrar el rol admin
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
 

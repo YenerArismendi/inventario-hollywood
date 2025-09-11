@@ -85,9 +85,6 @@ class ArticleResource extends Resource
                         'address' => $data['address'] ?? null,
                     ])->getKey();
                 }),
-            Forms\Components\TextInput::make('codigo')
-                ->label('Código del producto')
-                ->readOnly(),
             Forms\Components\Select::make('temporada')
                 ->label('Temporada de ventas')
                 ->options([
@@ -106,10 +103,9 @@ class ArticleResource extends Resource
                 ])
                 ->searchable()
                 ->placeholder('Selecciona una temporada'),
-            Forms\Components\Select::make('bodega_id')
-                ->relationship('bodega', 'nombre')
-                ->default(auth()->user()->bodega_id)
-                ->required(),
+            Forms\Components\TextInput::make('codigo')
+                ->label('Código del producto')
+                ->readOnly(),
         ]);
     }
 
@@ -127,10 +123,6 @@ class ArticleResource extends Resource
                 Tables\Columns\TextColumn::make('precio')->label('Precio'),
                 Tables\Columns\TextColumn::make('unidad_medida')->label('Unidad'),
                 Tables\Columns\TextColumn::make('proveedor.name')->label('Proveedor'),
-                Tables\Columns\TextColumn::make('bodega.nombre')
-                    ->label('Bodega')
-                    ->limit(20)
-                    ->tooltip(fn($record) => $record->bodega?->nombre),
                 Tables\Columns\TextColumn::make('variantes_count')
                     ->label('Variantes')
                     ->counts('variantes'), // <-- Esto usa withCount en la relación
@@ -149,20 +141,24 @@ class ArticleResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
 
         $query = parent::getEloquentQuery();
 
-        // Si NO tiene el rol de 'admin', filtrar por la bodega activa
-        if (!$user->hasRole('admin')) {
-            if ($user->active_bodega_id) {
-                $query->where('bodega_id', $user->active_bodega_id);
-            } else {
-                // Si no tiene bodega activa, no mostrar artículos
-                $query->whereRaw('0 = 1');
-            }
+        // Si el usuario no está logueado o es admin, no se aplican filtros de bodega.
+        if (!$user || $user->hasRole('admin')) {
+            return $query;
         }
-
+        // A partir de aquí, el usuario está logueado y no es admin.
+        if ($user->active_bodega_id) {
+            $query->whereHas('bodegas', function (Builder $q) use ($user) {
+                $q->where('bodega_id', $user->active_bodega_id);
+            });
+        } else {
+            // Si no tiene bodega activa, no se le muestra ningún artículo.
+            $query->whereRaw('0 = 1');
+        }
         return $query;
     }
 

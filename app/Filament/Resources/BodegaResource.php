@@ -12,14 +12,14 @@ use Filament\Forms\Components\Select;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use App\Filament\Resources\BodegaResource\RelationManagers\ArticlesRelationManager;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class BodegaResource extends Resource
 {
     protected static ?string $model = Bodega::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
 
     public static function form(Form $form): Form
     {
@@ -41,7 +41,7 @@ class BodegaResource extends Resource
                 Select::make('encargado_id')
                     ->label('Encargado de Bodega')
                     ->relationship(name: 'encargado', titleAttribute: 'name')
-                    ->getOptionLabelFromRecordUsing(fn (User $record) => "{$record->name} - ({$record->getRoleNames()->join(', ')})")
+                    ->getOptionLabelFromRecordUsing(fn(User $record) => "{$record->name} - ({$record->getRoleNames()->join(', ')})")
                     ->searchable()
                     ->preload(),
             ]);
@@ -80,7 +80,7 @@ class BodegaResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()
-                    ->visible(fn (User $user) => $user->can('delete_any_bodega')),
+                        ->visible(fn(User $user) => $user->can('delete_any_bodega')),
                 ]),
             ]);
     }
@@ -88,7 +88,7 @@ class BodegaResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            ArticlesRelationManager::class,
         ];
     }
 
