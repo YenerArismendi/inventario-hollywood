@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -61,5 +63,16 @@ class User extends Authenticatable
     public function sesionCajaActiva()
     {
         return $this->hasOne(SesionCaja::class)->where('estado', 'abierta');
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        if ($this->estado !== '1') {
+            throw ValidationException::withMessages([
+                'email' => 'Tu cuenta está inactiva, por favor contacta al administrador.',
+            ]);
+        }
+
+        return true;
     }
 }
