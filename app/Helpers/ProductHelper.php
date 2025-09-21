@@ -1,28 +1,26 @@
 <?php
-
 namespace App\Helpers;
 
 use App\Models\Article;
 
 class ProductHelper
 {
-    public static function generarCodigoProducto(string $nombre, ?int $id = null): string
+    public static function generarCodigoProducto(string $nombre, string $tipoDetalle): string
     {
-        // Tomamos las 3 primeras letras en mayúsculas
-        $prefijo = strtoupper(substr($nombre, 0, 3));
+        // Abreviatura del tipo detalle (3 primeras letras en mayúscula)
+        $detalle = strtoupper(substr($tipoDetalle, 0, 3));
 
-        // Si estamos actualizando, verificamos si el código ya existe para este artículo
-        if ($id) {
-            $articulo = Article::find($id);
-            if ($articulo && strpos($articulo->codigo, $prefijo) === 0) {
-                return $articulo->codigo; // Si el prefijo coincide, no generamos uno nuevo
-            }
-        }
+        // Abreviatura del nombre (3 primeras letras en mayúscula)
+        $abreviadoNombre = strtoupper(substr($nombre, 0, 3));
 
-        // Contamos cuántos productos existen con ese prefijo
-        $conteo = Article::where('codigo', 'like', $prefijo . '%')->count() + 1;
+        // Buscar el consecutivo de ese detalle en la BD
+        $count = Article::where('tipo_detalle', $tipoDetalle)->count() + 1;
 
-        // Retornamos el código final (ej: "PRO-001")
-        return $prefijo . '-' . str_pad($conteo, 3, '0', STR_PAD_LEFT);
+        // Formatear el consecutivo en 3 dígitos (001, 002, ...)
+        $consecutivo = str_pad($count, 3, '0', STR_PAD_LEFT);
+
+        // Construir el código final
+        return "{$detalle}-{$abreviadoNombre}-{$consecutivo}";
     }
 }
+

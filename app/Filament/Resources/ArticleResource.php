@@ -10,7 +10,8 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use App\Filament\Widgets\ArticleVariantsStats;
+
+//use App\Filament\Widgets\ArticleVariantsStats;
 use Illuminate\Database\Eloquent\Builder;
 
 class ArticleResource extends Resource
@@ -31,27 +32,61 @@ class ArticleResource extends Resource
             Forms\Components\TextInput::make('nombre')
                 ->label('Nombre del producto')
                 ->reactive()
-                ->afterStateUpdated(function ($state, callable $set) {
-                    if (!empty($state)) {
-                        $codigo = \App\Helpers\ProductHelper::generarCodigoProducto($state);
+                ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                    $tipoDetalle = $get('tipo_detalle');
+                    if (!empty($state) && !empty($tipoDetalle)) {
+                        $codigo = \App\Helpers\ProductHelper::generarCodigoProducto($state, $tipoDetalle);
                         $set('codigo', $codigo);
                     }
-                })
-                ->afterStateUpdated(fn($state, callable $set) => $set('nombre', strtolower($state))), // ← corregido
+                }),
             Forms\Components\Select::make('tipo')
                 ->options([
                     'producto' => 'Producto',
                     'insumo' => 'Insumo',
                 ])
                 ->label('Tipo')
+                ->required()
+                ->reactive(), // ← importante para refrescar dependencias
+
+            // Nuevo campo condicional
+            Forms\Components\Select::make('tipo_detalle')
+                ->label('Detalle según tipo')
+                ->options(function (callable $get) {
+                    if ($get('tipo') === 'producto') {
+                        return [
+                            'fragancia' => 'Fragancia',
+                            'bolso' => 'Bolso',
+                            'crema' => 'Crema',
+                        ];
+                    } elseif ($get('tipo') === 'insumo') {
+                        return [
+                            'envase' => 'Envase',
+                            'tapa' => 'Tapa',
+                            'etiqueta' => 'Etiqueta',
+                        ];
+                    }
+                    return [];
+                })
+                ->visible(fn(callable $get) => in_array($get('tipo'), ['producto', 'insumo']))
+                ->reactive()
+                ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                    $nombre = $get('nombre');
+                    if (!empty($state) && !empty($nombre)) {
+                        $codigo = \App\Helpers\ProductHelper::generarCodigoProducto($nombre, $state);
+                        $set('codigo', $codigo);
+                    }
+                })
                 ->required(),
+
             Forms\Components\TextInput::make('descripcion')
                 ->label('Descripción')
                 ->afterStateUpdated(fn($state, callable $set) => $set('descripcion', strtolower($state))),
+
             Forms\Components\TextInput::make('precio')
                 ->label('Precio')
                 ->numeric()
                 ->suffix('COP'),
+
             Forms\Components\Select::make('unidad_medida')
                 ->options([
                     'kilo' => 'Kilo',
@@ -62,6 +97,7 @@ class ArticleResource extends Resource
                 ])
                 ->label('Unidad')
                 ->required(),
+
             Forms\Components\Select::make('proveedor_id')
                 ->label('Proveedor')
                 ->relationship('proveedor', 'name')
@@ -85,6 +121,7 @@ class ArticleResource extends Resource
                         'address' => $data['address'] ?? null,
                     ])->getKey();
                 }),
+
             Forms\Components\Select::make('temporada')
                 ->label('Temporada de ventas')
                 ->options([
@@ -102,7 +139,10 @@ class ArticleResource extends Resource
                     'diciembre_navidad' => 'Diciembre – Navidad y Fin de año',
                 ])
                 ->searchable()
-                ->placeholder('Selecciona una temporada'),
+                ->placeholder('Selecciona una temporada')
+                ->reactive()
+                ->visible(fn(callable $get) => $get('tipo') === 'producto'), // 👈 aquí la magia,
+
             Forms\Components\TextInput::make('codigo')
                 ->label('Código del producto')
                 ->readOnly(),
@@ -116,16 +156,38 @@ class ArticleResource extends Resource
                 Tables\Columns\TextColumn::make('nombre')
                     ->label('Nombre')
                     ->limit(20)
-                    ->tooltip(fn($record) => $record->nombre),
-                Tables\Columns\TextColumn::make('tipo')->label('Tipo'),
-                Tables\Columns\TextColumn::make('codigo')->label('Código'),
-                Tables\Columns\TextColumn::make('descripcion')->label('Descripción')->limit(20),
-                Tables\Columns\TextColumn::make('precio')->label('Precio'),
-                Tables\Columns\TextColumn::make('unidad_medida')->label('Unidad'),
-                Tables\Columns\TextColumn::make('proveedor.name')->label('Proveedor'),
-                Tables\Columns\TextColumn::make('variantes_count')
-                    ->label('Variantes')
-                    ->counts('variantes'), // <-- Esto usa withCount en la relación
+                    ->tooltip(fn($record) => $record->nombre)
+                    ->searchable(), // 👈 habilita búsqueda en esta columna
+
+                Tables\Columns\TextColumn::make('tipo')
+                    ->label('Tipo')
+                    ->searchable(), // 👈 también aquí
+
+                Tables\Columns\TextColumn::make('codigo')
+                    ->label('Código')
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('descripcion')
+                    ->label('Descripción')
+                    ->limit(20)
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('precio')
+                    ->label('Precio')
+                    ->formatStateUsing(function ($state) {
+                        if ($state < 100) {
+                            return number_format($state, 2, ',', '.') . ' COP';
+                        }
+                        return number_format($state, 0, ',', '.') . ' COP';
+                    })
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('unidad_medida')
+                    ->label('Unidad'),
+
+                Tables\Columns\TextColumn::make('proveedor.name')
+                    ->label('Proveedor')
+                    ->searchable(), // 👈 importante si quieres buscar por proveedor
             ])
             ->filters([])
             ->actions([
@@ -135,7 +197,8 @@ class ArticleResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->searchPlaceholder('Buscar artículo...'); // 👈 texto del buscador
     }
 
 
