@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('movimiento_inventarios', function (Blueprint $table) {
             $table->id();
             $table->foreignId('bodega_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('producto_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('articles_id')->constrained()->cascadeOnDelete();
             $table->integer('cantidad'); // Puede ser positivo o negativo
             $table->string('tipo')->comment('ingreso_compra, salida_venta, ajuste, traslado');
             $table->string('estado')->default('pendiente_confirmacion'); // pendiente_confirmacion, confirmado, rechazado

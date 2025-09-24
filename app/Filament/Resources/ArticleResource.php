@@ -204,24 +204,21 @@ class ArticleResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        /** @var \App\Models\User $user */
         $user = auth()->user();
-
         $query = parent::getEloquentQuery();
 
-        // Si el usuario no está logueado o es admin, no se aplican filtros de bodega.
         if (!$user || $user->hasRole('admin')) {
             return $query;
         }
-        // A partir de aquí, el usuario está logueado y no es admin.
+
         if ($user->active_bodega_id) {
             $query->whereHas('bodegas', function (Builder $q) use ($user) {
-                $q->where('bodega_id', $user->active_bodega_id);
+                $q->where('bodega_article.bodega_id', $user->active_bodega_id);
             });
         } else {
-            // Si no tiene bodega activa, no se le muestra ningún artículo.
             $query->whereRaw('0 = 1');
         }
+
         return $query;
     }
 
