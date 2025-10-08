@@ -1,0 +1,6 @@
+[build]
+builder = "railpack/php"
+
+[php]
+version = "8.2"
+extensions = ["intl", "bcmath", "zip"]
