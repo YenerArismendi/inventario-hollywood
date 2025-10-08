@@ -25,7 +25,6 @@ RUN composer install --no-dev --no-interaction --optimize-autoloader --prefer-di
 COPY . .
 
 # Copia el archivo de entorno de producción si existe
-# (Esto evita errores en php artisan durante la compilación)
 RUN if [ -f .env.production ]; then cp .env.production .env; fi
 
 # Instala dependencias frontend (si existen)
@@ -43,8 +42,8 @@ fi
 RUN chown -R www-data:www-data storage bootstrap/cache && \
     chmod -R 775 storage bootstrap/cache
 
-# Expone el puerto (Railway usa el 8000 por defecto)
+# Expone el puerto (Railway asigna uno automáticamente)
 EXPOSE 8000
 
-# Comando de inicio usando el servidor integrado de Laravel
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+# 🚀 Comando de inicio - Usa el puerto dinámico asignado por Railway
+CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
