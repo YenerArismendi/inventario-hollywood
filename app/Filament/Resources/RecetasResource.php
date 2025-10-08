@@ -42,23 +42,6 @@ class RecetasResource extends Resource
                                 ->prefixIcon('heroicon-o-book-open')
                                 ->required(),
 
-                            TextInput::make('descripcion')
-                                ->label('Descripción')
-                                ->prefixIcon('heroicon-o-pencil-square')
-                                ->columnSpanFull(),
-
-                            Select::make('articulo_final_id')
-                                ->label('Artículo Final')
-                                ->prefixIcon('heroicon-o-cube')
-                                ->searchable()
-                                ->relationship(
-                                    name: 'articuloFinal',
-                                    titleAttribute: 'nombre',
-                                    modifyQueryUsing: fn($query) => $query->where('tipo', 'producto')
-                                )
-                                ->preload()
-                                ->required(),
-
                             Select::make('tipo')
                                 ->label('Tipo de Receta')
                                 ->prefixIcon('heroicon-o-beaker')
@@ -69,6 +52,13 @@ class RecetasResource extends Resource
                                     'splash' => 'Splash',
                                 ])
                                 ->required(),
+
+                            TextInput::make('precio')
+                                ->label('Precio Venta')
+                                ->prefixIcon('heroicon-o-currency-dollar')
+                                ->required(),
+
+
                         ])
                         ->columns(2),
 
@@ -82,68 +72,31 @@ class RecetasResource extends Resource
                                         ->relationship('detalles')
                                         ->label('Componentes de la Receta')
                                         ->schema([
-                                            Select::make('articulo_id')
+                                            Select::make('insumos_id')
                                                 ->relationship(
-                                                    name: 'articulo',
+                                                    name: 'insumo',
                                                     titleAttribute: 'nombre',
-                                                    modifyQueryUsing: fn($query) => $query->where('tipo', 'insumo')
                                                 )
                                                 ->label('Insumo')
                                                 ->searchable()
                                                 ->required()
-                                                ->reactive()
-                                                ->afterStateUpdated(function ($state, callable $set) {
-                                                    // Cuando cambia el insumo, traemos sus datos
-                                                    $articulo = Article::find($state);
-                                                    if ($articulo) {
-                                                        $set('precio_unitario', $articulo->precio);
-                                                        $set('presentacion', $articulo->cantidad_total);
-                                                    } else {
-                                                        $set('precio_unitario', null);
-                                                        $set('presentacion', null);
-                                                        $set('costo_total', null);
-                                                    }
-                                                })
+                                                ->preload()
                                                 ->columnSpan(3),
 
                                             TextInput::make('cantidad')
                                                 ->label('Cantidad Usada')
                                                 ->numeric()
                                                 ->required()
-                                                ->reactive()
-                                                ->afterStateUpdated(function ($state, callable $get, callable $set) {
-                                                    $precio_unitario = $get('precio_unitario');
-                                                    $presentacion = $get('presentacion');
-
-                                                    if ($precio_unitario && $presentacion && $state) {
-                                                        $costo_total = ($precio_unitario / $presentacion) * $state;
-                                                        $set('costo_total', round($costo_total, 2));
-                                                    } else {
-                                                        $set('costo_total', null);
-                                                    }
-                                                })
                                                 ->columnSpan(3),
 
-                                            TextInput::make('precio_unitario')
-                                                ->label('Precio Unitario')
-                                                ->numeric()
-                                                ->disabled()
-                                                ->dehydrated(false)
+                                            Select::make('unidad')
+                                                ->label('Unidad')
+                                                ->options([
+                                                    'mililitros' => 'Mililitros',
+                                                    'unidad' => 'Unidad',
+                                                ])
                                                 ->columnSpan(2),
 
-                                            TextInput::make('presentacion')
-                                                ->label('Presentación')
-                                                ->numeric()
-                                                ->disabled()
-                                                ->dehydrated(false)
-                                                ->columnSpan(2),
-
-                                            TextInput::make('costo_total')
-                                                ->label('Costo Total')
-                                                ->numeric()
-                                                ->disabled(false) // Se guarda en BD
-                                                ->suffix('COP')
-                                                ->columnSpan(2),
                                         ])
                                         ->addActionLabel('Agregar Insumo')
                                         ->columns(12)
@@ -166,24 +119,60 @@ class RecetasResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('nombre')
-                    ->label('Nombre')
-                    ->limit(20)
-                    ->searchable(),
+                    ->label('Nombre de la Receta')
+                    ->searchable()
+                    ->sortable()
+                    ->limit(25),
 
-                Tables\Columns\TextColumn::make('descripcion')
-                    ->label('Descripción')
-                    ->limit(20)
-                    ->searchable(),
+                Tables\Columns\TextColumn::make('tipo')
+                    ->label('Tipo')
+                    ->sortable()
+                    ->badge() // Muestra un estilo tipo etiqueta
+                    ->color(fn(string $state): string => match ($state) {
+                        'california' => 'success',
+                        'acrilico' => 'info',
+                        'potes' => 'warning',
+                        'splash' => 'primary',
+                        default => 'gray',
+                    }),
 
-                Tables\Columns\TextColumn::make('articuloFinal.nombre')
-                    ->label('Artículo Final')
-                    ->limit(20)
-                    ->searchable(),
+                Tables\Columns\TextColumn::make('precio')
+                    ->label('Precio Venta')
+                    ->formatStateUsing(fn($state) => '$' . number_format($state, 0, ',', '.'))
+                    ->sortable(),
 
-                Tables\Columns\TagsColumn::make('detalles.articulo.nombre')
+                Tables\Columns\TextColumn::make('detalles.insumo')
                     ->label('Insumos')
-                    ->limit(3)
-                    ->separator(','),
+                    ->formatStateUsing(function ($state, $record) {
+                        // Si no hay relación detalles, devolvemos texto vacío
+                        if (!$record->detalles) {
+                            return '—';
+                        }
+
+                        $insumos = $record->detalles->pluck('insumo.nombre')->filter()->toArray();
+
+                        if (empty($insumos)) {
+                            return '—';
+                        }
+
+                        // Mostramos hasta 3 insumos
+                        return implode(', ', array_slice($insumos, 0, 3))
+                            . (count($insumos) > 3 ? '...' : '');
+                    })
+                    ->tooltip(function ($record) {
+                        if (!$record->detalles) {
+                            return null;
+                        }
+
+                        return $record->detalles->pluck('insumo.nombre')->filter()->join(', ');
+                    })
+                    ->wrap()
+                    ->limit(30),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Creado')
+                    ->dateTime('d/m/Y H:i')
+                    ->sortable(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

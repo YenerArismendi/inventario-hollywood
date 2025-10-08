@@ -18,13 +18,10 @@ return new class extends Migration {
                 ->constrained('recetas')
                 ->cascadeOnDelete();
 
-            // Clave foránea hacia artículos
-            $table->foreignId('articulo_id')
-                ->constrained('articles');
+            $table->foreignId('insumos_id')->constrained('insumos')->cascadeOnDelete();
 
             $table->integer('cantidad');
             $table->string('unidad');
-            $table->decimal('costo_total', 10, 2)->default(0);
             $table->timestamps();
         });
     }

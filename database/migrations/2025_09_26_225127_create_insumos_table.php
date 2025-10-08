@@ -11,11 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('recetas', function (Blueprint $table) {
+        Schema::create('insumos', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
-            $table->string('tipo');
-            $table->decimal('precio', 10, 2);
+            $table->string('unidad_compra');
+            $table->string('unidad_consumo');
+            $table->string('conversion');
+            $table->integer('stock')->default(0);
+            $table->decimal('costo_unitario_promedio', '10', '2')->nullable();
             $table->timestamps();
         });
     }
@@ -25,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('recetas');
+        Schema::dropIfExists('insumos');
     }
 };
