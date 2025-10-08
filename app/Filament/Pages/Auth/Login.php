@@ -31,18 +31,23 @@ class Login extends BaseLogin
      */
     public function authenticate(): ?LoginResponse
     {
-        $response = parent::authenticate();
+        try {
+            $response = parent::authenticate();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Si las credenciales son inválidas, Filament se encarga de mostrar el error.
+            // Simplemente relanzamos la excepción para no interferir con ese flujo.
+            throw $e;
+        }
 
-        if ((int) auth()->user()->estado !== 1) {
+        // Esta comprobación solo se ejecutará si la autenticación fue exitosa.
+        if (auth()->check() && (int)auth()->user()->estado !== 1) {
+            $user = auth()->user(); // Guardamos el usuario antes de hacer logout
             auth()->logout();
 
-            Notification::make()
-                ->title('Acceso denegado')
-                ->body('Tu cuenta está inactiva, contacta al administrador.')
-                ->danger()
-                ->send();
-
-            return app(LoginResponse::class);
+            // Lanzamos una excepción de validación para mostrar el mensaje de error en el formulario.
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'data.email' => 'Tu cuenta está inactiva, contacta al administrador.',
+            ]);
         }
 
         return $response;

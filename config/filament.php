@@ -100,4 +100,10 @@ return [
 
     'locale' => 'es',
 
+    'auth' => [
+        'pages' => [
+            'login' => \App\Filament\Pages\Auth\Login::class,
+        ],
+    ],
+
 ];
