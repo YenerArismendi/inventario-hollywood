@@ -1,11 +1,13 @@
 <?php
-// routes/api.php
+
+use Laravel\Sanctum\Http\Controllers\CsrfCookieController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\ArticleController;
 
 // Agrupamos por versión
 Route::prefix('v1')->group(function () {
+    Route::get('/sanctum/csrf-cookie', [CsrfCookieController::class, 'show']);
     Route::get('/articles', [ArticleController::class, 'index']);
     // Aquí irían más rutas:
     // Route::post('/ventas', [VentaController::class, 'store']);
