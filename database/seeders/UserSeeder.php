@@ -18,7 +18,7 @@ class UserSeeder extends Seeder
         $adminUser = User::firstOrCreate(
             ['email' => 'admin@hollywood.com'],
             [
-                'name' => 'Administrador',
+                'name' => 'admin',
                 'password' => Hash::make('password'), // ¡Cambiar en producción!
             ]
         );
