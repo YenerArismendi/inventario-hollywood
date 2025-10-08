@@ -63,6 +63,8 @@ class ArticleResource extends Resource
                             'envase' => 'Envase',
                             'tapa' => 'Tapa',
                             'etiqueta' => 'Etiqueta',
+                            'liquido' => 'Liquido',
+
                         ];
                     }
                     return [];
@@ -83,9 +85,13 @@ class ArticleResource extends Resource
                 ->afterStateUpdated(fn($state, callable $set) => $set('descripcion', strtolower($state))),
 
             Forms\Components\TextInput::make('precio')
-                ->label('Precio')
+                ->label('Precio total')
                 ->numeric()
                 ->suffix('COP'),
+
+            Forms\Components\TextInput::make('cantidad_total')
+                ->label('Cantidad total')
+                ->numeric(),
 
             Forms\Components\Select::make('unidad_medida')
                 ->options([
@@ -106,11 +112,15 @@ class ArticleResource extends Resource
                 ->createOptionForm([
                     Forms\Components\TextInput::make('name')
                         ->required()
-                        ->label('Nombre del proveedor'),
+                        ->label('Nombre del proveedor')
+                        ->afterStateUpdated(fn($state, callable $set) => $set('name', strtolower($state))),
                     Forms\Components\TextInput::make('phone')->label('Teléfono'),
-                    Forms\Components\TextInput::make('responsible')->label('Responsable'),
-                    Forms\Components\TextInput::make('email')->email()->label('Correo'),
-                    Forms\Components\TextInput::make('address')->label('Dirección'),
+                    Forms\Components\TextInput::make('responsible')->label('Responsable')
+                        ->afterStateUpdated(fn($state, callable $set) => $set('responsible', strtolower($state))),
+                    Forms\Components\TextInput::make('email')->email()->label('Correo')
+                        ->afterStateUpdated(fn($state, callable $set) => $set('email', strtolower($state))),
+                    Forms\Components\TextInput::make('address')->label('Dirección')
+                        ->afterStateUpdated(fn($state, callable $set) => $set('address', strtolower($state))),
                 ])
                 ->createOptionUsing(function (array $data) {
                     return Suppliers::create([
@@ -181,6 +191,11 @@ class ArticleResource extends Resource
                         return number_format($state, 0, ',', '.') . ' COP';
                     })
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('cantidad_total')
+                    ->label('Cantidad total')
+                    ->limit(20)
+                    ->searchable(),
 
                 Tables\Columns\TextColumn::make('unidad_medida')
                     ->label('Unidad'),
