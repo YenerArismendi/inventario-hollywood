@@ -1,32 +1,50 @@
-# Usa PHP 8.2 con extensiones necesarias
-FROM dunglas/frankenphp:php8.2
+# ==========================================
+# 🐘 Imagen base con PHP 8.3 y servidor FrankenPHP
+# ==========================================
+FROM dunglas/frankenphp:php8.3
 
-# Instala dependencias del sistema necesarias
+# Instala dependencias del sistema y extensiones necesarias
 RUN apt-get update && apt-get install -y \
-    git unzip zip libicu-dev libzip-dev libonig-dev libxml2-dev \
-    && docker-php-ext-install intl bcmath zip \
+    git unzip zip libicu-dev libzip-dev libonig-dev libxml2-dev nodejs npm \
+    && install-php-extensions intl bcmath zip pdo_mysql mbstring xml gd exif pcntl \
     && rm -rf /var/lib/apt/lists/*
 
-# Instala Composer
+# Instala Composer desde la imagen oficial
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copia archivos del proyecto
+# Define el directorio de trabajo
 WORKDIR /app
+
+# Copia solo los archivos de Composer primero (para aprovechar la caché)
+COPY composer.json composer.lock ./
+
+# Instala dependencias PHP (modo producción)
+RUN composer install --no-dev --no-interaction --optimize-autoloader --prefer-dist || true
+
+# Copia el resto del proyecto
 COPY . .
 
-# Instala dependencias de PHP
-RUN composer install --optimize-autoloader --no-dev
+# Copia el archivo de entorno de producción si existe
+RUN if [ -f .env.production ]; then cp .env.production .env; fi
 
-# Compila assets de Node (si usas Vite o npm run build)
-RUN npm install && npm run build
+# Instala dependencias frontend (si existen)
+RUN if [ -f package.json ]; then npm install && npm run build; fi
 
-# Genera cachés de Laravel
-RUN php artisan config:cache && \
+# Genera la key y cachés de Laravel (solo si .env existe)
+RUN if [ -f .env ]; then \
+    php artisan key:generate --force && \
+    php artisan config:cache && \
     php artisan route:cache && \
-    php artisan view:cache
+    php artisan view:cache; \
+fi
 
-# Expone el puerto de aplicación (FrankenPHP usa 8000)
+# Ajusta permisos para Laravel
+RUN chown -R www-data:www-data storage bootstrap/cache && \
+    chmod -R 775 storage bootstrap/cache
+
+# ==========================================
+# 🚀 Inicio del servidor
+# ==========================================
+# Railway usa la variable $PORT
 EXPOSE 8000
-
-# Comando de inicio
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
