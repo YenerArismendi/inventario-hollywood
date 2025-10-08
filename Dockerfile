@@ -42,17 +42,9 @@ fi
 RUN chown -R www-data:www-data storage bootstrap/cache && \
     chmod -R 775 storage bootstrap/cache
 
-# Expone el puerto (Railway asigna uno automáticamente)
+# ==========================================
+# 🚀 Inicio del servidor
+# ==========================================
+# Railway usa la variable $PORT
 EXPOSE 8000
-
-# ==========================================
-# 🚀 Comando de inicio para Railway
-# ==========================================
-ENTRYPOINT php -r "if (file_exists('.env')) { \
-    file_put_contents('.env', preg_replace('/^APP_URL=.*/m', 'APP_URL=https://'.getenv('RAILWAY_STATIC_URL'), file_get_contents('.env'))); \
-} \
-if (!file_exists('.env')) { \
-    copy('.env.example', '.env'); \
-    echo '\nAPP_URL=https://'.getenv('RAILWAY_STATIC_URL') >> .env; \
-}"; \
-php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
