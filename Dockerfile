@@ -24,20 +24,26 @@ RUN composer install --no-dev --no-interaction --optimize-autoloader --prefer-di
 # Copia el resto del proyecto
 COPY . .
 
+# Copia el archivo de entorno de producción si existe
+# (Esto evita errores en php artisan durante la compilación)
+RUN if [ -f .env.production ]; then cp .env.production .env; fi
+
 # Instala dependencias frontend (si existen)
 RUN if [ -f package.json ]; then npm install && npm run build; fi
 
-# Genera cachés de Laravel
-RUN php artisan key:generate --force && \
+# Genera la key y cachés de Laravel (solo si .env existe)
+RUN if [ -f .env ]; then \
+    php artisan key:generate --force && \
     php artisan config:cache && \
     php artisan route:cache && \
-    php artisan view:cache
+    php artisan view:cache; \
+fi
 
 # Ajusta permisos para Laravel
 RUN chown -R www-data:www-data storage bootstrap/cache && \
     chmod -R 775 storage bootstrap/cache
 
-# Expone el puerto (Railway asigna el 8000 automáticamente)
+# Expone el puerto (Railway usa el 8000 por defecto)
 EXPOSE 8000
 
 # Comando de inicio usando el servidor integrado de Laravel
