@@ -22,6 +22,6 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
-Dockerfile
+Dockerfile.backup
 railway.toml
 docker-compose.yml
