@@ -4,10 +4,6 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-use App\Models\User;
-use Spatie\Permission\Models\Role;
-use Illuminate\Support\Facades\Hash;
-
 Route::get('/', function () {
     return view('welcome');
 });
@@ -42,20 +38,3 @@ Route::post('/logout', function (Request $request) {
     // Devuelve una respuesta exitosa.
     return response()->json(['message' => 'Sesión cerrada correctamente.']);
 })->middleware('auth');
-
-Route::get('/crear-admin', function () {
-    $role = Role::firstOrCreate(['name' => 'admin']);
-
-    $user = User::firstOrCreate(
-        ['email' => 'admin@tuapp.com'],
-        [
-            'name' => 'Administrador',
-            'password' => Hash::make('12345678'),
-            'estado' => 1,
-        ]
-    );
-
-    $user->assignRole($role);
-
-    return 'Usuario admin creado correctamente.';
-});
