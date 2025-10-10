@@ -64,15 +64,4 @@ class User extends Authenticatable
     {
         return $this->hasOne(SesionCaja::class)->where('estado', 'abierta');
     }
-
-//    public function canAccessPanel(Panel $panel): bool
-//    {
-//        if ($this->estado !== '1') {
-//            throw ValidationException::withMessages([
-//                'email' => 'Tu cuenta está inactiva, por favor contacta al administrador.',
-//            ]);
-//        }
-//
-//        return true;
-//    }
 }
