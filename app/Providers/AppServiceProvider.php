@@ -3,10 +3,10 @@
 namespace App\Providers;
 
 use Filament\View\PanelsRenderHook;
-use Illuminate\Contracts\View\View;
-use Filament\Support\Facades\FilamentView;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Filament\Support\Facades\FilamentView;
 use App\Models\Bodega;
 use App\Models\MovimientoInventario;
 use App\Observers\BodegaObserver;
@@ -27,13 +27,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // ✅ Forzar HTTPS en Railway o producción
+        if (env('APP_ENV') === 'production' || env('FORCE_HTTPS', false)) {
+            URL::forceScheme('https');
+        }
+
         // Inyectar el dropdown en el topbar de Filament
-        //Apartado para mostrar el menu para cambiar de bodega para el usuario
         FilamentView::registerRenderHook(
             PanelsRenderHook::TOPBAR_START,
-            fn (): string => Blade::render('@livewire(\'topbar.bodega-selector\')')
+            fn (): string => Blade::render('@livewire("topbar.bodega-selector")')
         );
 
+        // Observadores de modelos
         Bodega::observe(BodegaObserver::class);
         MovimientoInventario::observe(MovimientoInventarioObserver::class);
     }

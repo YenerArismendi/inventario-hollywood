@@ -6,7 +6,10 @@
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.3",
+        "ext-intl": "*",
+        "ext-zip": "*",
+        "ext-bcmath": "*",
         "awcodes/filament-table-repeater": "^3.1",
         "bezhansalleh/filament-shield": "^3.3",
         "filament/filament": "^3.3",
@@ -65,7 +68,8 @@
         "test": [
             "@php artisan config:clear --ansi",
             "@php artisan test"
-        ]
+        ],
+        "start": "php artisan serve --host=0.0.0.0 --port=$PORT"
     },
     "extra": {
         "laravel": {
