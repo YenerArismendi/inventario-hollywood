@@ -23,6 +23,15 @@ class SesionCaja extends Model
         'notas_cierre'
     ];
 
+    protected $casts = [
+        'fecha_apertura' => 'datetime',
+        'fecha_cierre' => 'datetime',
+        'monto_inicial' => 'decimal:2',
+        'monto_final_calculado' => 'decimal:2',
+        'monto_final_contado' => 'decimal:2',
+        'diferencia' => 'decimal:2',
+    ];
+
     public function caja()
     {
         return $this->belongsTo(Caja::class);
