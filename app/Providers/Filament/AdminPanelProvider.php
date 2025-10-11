@@ -55,6 +55,7 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
                 \App\Http\Middleware\CheckUserActive::class, //para corta la sesion del usuario si se inactiva
+                \App\Http\Middleware\EnsureUserIsAdmin::class,
             ])
             ->plugins([
                 FilamentShieldPlugin::make(),
@@ -62,9 +63,7 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
-            ->authorize(function ($user) {
-                return $user && $user->hasRole('admin');
-            })
+
             ->sidebarCollapsibleOnDesktop()
             ->brandName('HOLLYWOOD');
     }
