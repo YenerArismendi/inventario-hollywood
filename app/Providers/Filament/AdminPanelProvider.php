@@ -62,6 +62,9 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
+            ->authorize(function ($user) {
+                return $user && $user->hasRole('admin');
+            })
             ->sidebarCollapsibleOnDesktop()
             ->brandName('HOLLYWOOD');
     }
