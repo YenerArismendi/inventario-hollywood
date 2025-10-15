@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\ArticleController;
 use App\Http\Controllers\Api\V1\CajaController;
 use App\Http\Controllers\Api\V1\VentaController;
+use App\Http\Controllers\Api\V1\ClienteController;
 use App\Http\Controllers\Api\V1\SesionCajaController;
 
 // Esta ruta es para obtener el usuario autenticado
@@ -26,4 +27,6 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('/ventas', [VentaController::class, 'store']);
     Route::get('/ventas', [VentaController::class, 'index']);
     Route::get('/ventas/sesion-actual', [VentaController::class, 'currentSessionSales']);
+    // Rutas para Clientes
+    Route::get('/clientes', [ClienteController::class, 'index']);
 });

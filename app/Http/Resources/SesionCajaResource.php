@@ -27,8 +27,11 @@ class SesionCajaResource extends JsonResource
                 'id' => $this->user->id,
                 'nombre' => $this->user->name,
             ],
-            // Campos que pueden ser nulos (solo se añaden a la respuesta si tienen valor)
-            'monto_final_calculado' => $this->whenNotNull($this->monto_final_calculado),
+            // Campos de cierre (solo se añaden a la respuesta si tienen valor)
+            'total_ventas_efectivo' => $this->whenNotNull($this->total_ventas_efectivo),
+            'total_ventas_transferencia' => $this->whenNotNull($this->total_ventas_transferencia),
+            'total_ventas_credito' => $this->whenNotNull($this->total_ventas_credito),
+            'monto_final_efectivo_calculado' => $this->whenNotNull($this->monto_final_efectivo_calculado),
             'monto_final_contado' => $this->whenNotNull($this->monto_final_contado),
             'diferencia' => $this->whenNotNull($this->diferencia),
             'fecha_cierre' => $this->whenNotNull($this->fecha_cierre?->toIso8601String()),

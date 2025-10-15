@@ -58,7 +58,7 @@ class VentaController extends Controller
     {
         $validated = $request->validate([
             'cliente_id' => 'nullable|integer|exists:clientes,id',
-            'metodo_pago' => 'required|string|in:efectivo,tarjeta,transferencia',
+            'metodo_pago' => 'required|string|in:efectivo,tarjeta,transferencia,credito',
             'subtotal' => 'required|numeric',
             'total' => 'required|numeric',
             'descuento' => 'nullable|numeric',

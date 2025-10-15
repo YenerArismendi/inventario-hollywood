@@ -2,16 +2,15 @@
 
 namespace App\Filament\Resources;
 
+use App\Support\ColombiaData;
 use App\Filament\Resources\ClienteResource\Pages;
-use App\Filament\Resources\ClienteResource\RelationManagers;
 use App\Models\Cliente;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Validation\Rule;
 
 class ClienteResource extends Resource
 {
@@ -27,29 +26,53 @@ class ClienteResource extends Resource
                 Forms\Components\TextInput::make('nombre')
                     ->required()->maxLength(255),
                 Forms\Components\TextInput::make('email')
-                    ->email()->maxLength(255),
+                    ->email()->maxLength(255)->unique(ignoreRecord: true),
                 Forms\Components\TextInput::make('documento_identidad')
-                    ->label('Documento de Identidad')->maxLength(255),
+                    ->label('Documento de Identidad')->maxLength(255)->unique(ignoreRecord: true),
                 Forms\Components\TextInput::make('telefono')
                     ->tel()->maxLength(255),
-                Forms\Components\TextInput::make('ciudad')
-                    ->maxLength(255),
+                Forms\Components\Select::make('departamento')
+                    ->label('Departamento')
+                    ->options(ColombiaData::getDepartamentos())
+                    ->searchable()
+                    ->live() // Crucial para la reactividad
+                    ->afterStateUpdated(fn(Forms\Set $set) => $set('ciudad', null)), // Resetea la ciudad al cambiar de depto.
+
+                Forms\Components\Select::make('ciudad')
+                    ->label('Ciudad')
+                    ->options(function (Forms\Get $get): array {
+                        return ColombiaData::getCiudades($get('departamento') ?? '');
+                    })
+                    ->searchable()
+                    ->visible(fn(Forms\Get $get) => !empty($get('departamento'))), // Solo visible si se ha elegido un depto.
                 Forms\Components\TextInput::make('direccion')
                     ->maxLength(255),
                 Forms\Components\Toggle::make('tiene_credito')
                     ->label('¿Tiene crédito?')
-                    ->live(), // Usamos live() en lugar de reactive() para Filament v3
-                Forms\Components\TextInput::make('limite_credito')
-                    ->label('Límite de Crédito')
-                    ->numeric()
-                    ->prefix('COP')
-                    ->default(0)
-                    ->visible(fn(Forms\Get $get) => $get('tiene_credito')),
-                Forms\Components\TextInput::make('dias_credito')
-                    ->label('Días de Crédito')
-                    ->numeric()
-                    ->default(0)
-                    ->visible(fn(Forms\Get $get) => $get('tiene_credito')),
+                    ->live()
+                    ->reactive(),
+
+                Forms\Components\Group::make()
+                    ->schema([
+                        Forms\Components\TextInput::make('limite_credito')
+                            ->label('Límite de Crédito')
+                            ->prefix('COP')
+                            ->mask(\Filament\Support\RawJs::make('$money($input, \'.\')'))
+                            ->rule(function () {
+                                return function (string $attribute, $value, \Closure $fail) {
+                                    $cleanedValue = str_replace([',', '.'], '', $value);
+                                    if (!is_numeric($cleanedValue)) {
+                                        $fail('El campo :attribute debe ser numérico.');
+                                    }
+                                };
+                            })
+                            ->dehydrateStateUsing(fn($state) => str_replace([',', '.'], '', $state ?? ''))
+                            ->default(0),
+                        Forms\Components\TextInput::make('dias_credito')
+                            ->label('Días de Crédito')
+                            ->numeric()
+                            ->default(0),
+                    ])->visible(fn(Forms\Get $get) => $get('tiene_credito')),
             ]);
     }
 

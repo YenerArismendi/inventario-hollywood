@@ -56,12 +56,23 @@ class SesionCajaService
      */
     public function cerrarSesion(SesionCaja $sesion, float $montoFinalContado, ?string $notasCierre): SesionCaja
     {
-        $totalVentas = $sesion->ventas()->sum('total');
-        $montoCalculado = $sesion->monto_inicial + $totalVentas;
-        $diferencia = $montoFinalContado - $montoCalculado;
+        // 1. Calculamos los totales de ventas por cada método de pago
+        $ventas = $sesion->ventas();
+        $totalEfectivo = $ventas->clone()->where('metodo_pago', 'efectivo')->sum('total');
+        $totalTransferencia = $ventas->clone()->where('metodo_pago', 'transferencia')->sum('total');
+        $totalCredito = $ventas->clone()->where('metodo_pago', 'credito')->sum('total');
+
+        // 2. El dinero que DEBERÍA HABER en la caja es la base + solo las ventas en efectivo
+        $montoEfectivoCalculado = $sesion->monto_inicial + $totalEfectivo;
+
+        // 3. La diferencia se calcula contra lo que debería haber en efectivo
+        $diferencia = $montoFinalContado - $montoEfectivoCalculado;
 
         $sesion->update([
-            'monto_final_calculado' => $montoCalculado,
+            'total_ventas_efectivo' => $totalEfectivo,
+            'total_ventas_transferencia' => $totalTransferencia,
+            'total_ventas_credito' => $totalCredito,
+            'monto_final_efectivo_calculado' => $montoEfectivoCalculado,
             'monto_final_contado' => $montoFinalContado,
             'diferencia' => $diferencia,
             'notas_cierre' => $notasCierre,

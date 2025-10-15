@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Article;
-use App\Models\Bodega;
+use App\Models\Cliente;
 use App\Models\User;
 use App\Models\Venta;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +21,7 @@ class VentaService
      */
     public function crearVenta(User $user, array $datosVenta): Venta
     {
-        // 1. Validar que el usuario tiene una sesión de caja activa.
+        // Validar que el usuario tiene una sesión de caja activa.
         $sesionCaja = $user->sesionCajaActiva;
         if (!$sesionCaja) {
             throw ValidationException::withMessages([
@@ -29,11 +29,31 @@ class VentaService
             ]);
         }
 
+        // Validación específica para ventas a crédito
+        if ($datosVenta['metodo_pago'] === 'credito') {
+            if (empty($datosVenta['cliente_id'])) {
+                throw ValidationException::withMessages(['cliente_id' => 'Se debe seleccionar un cliente para ventas a crédito.']);
+            }
+
+            $cliente = Cliente::findOrFail($datosVenta['cliente_id']);
+
+            if (!$cliente->tiene_credito) {
+                throw ValidationException::withMessages(['cliente_id' => 'Este cliente no tiene el crédito habilitado.']);
+            }
+
+            if ($cliente->en_mora) {
+                throw ValidationException::withMessages(['cliente_id' => 'El cliente se encuentra en mora y no puede realizar compras a crédito.']);
+            }
+
+            if ($cliente->credito_disponible < $datosVenta['total']) {
+                throw ValidationException::withMessages(['total' => "El cliente no tiene crédito suficiente. Disponible: {$cliente->credito_disponible}"]);
+            }
+        }
+
         // Usamos una transacción para asegurar la integridad de los datos.
-        // Si algo falla, todo se revierte.
         return DB::transaction(function () use ($user, $sesionCaja, $datosVenta) {
 
-            // 2. Validar stock y bloquear los artículos para evitar concurrencia.
+            // Validar stock y bloquear los artículos para evitar concurrencia.
             $bodega = $sesionCaja->caja->bodega;
             foreach ($datosVenta['items'] as $item) {
                 $articulo = $bodega->articles()->where('article_id', $item['id'])->lockForUpdate()->first();
@@ -46,7 +66,7 @@ class VentaService
                 }
             }
 
-            // 3. Crear el registro principal de la Venta.
+            // Crear el registro principal de la Venta.
             $venta = Venta::create([
                 'user_id' => $user->id,
                 'bodega_id' => $bodega->id,
@@ -56,7 +76,7 @@ class VentaService
                 'descuento' => $datosVenta['descuento'] ?? 0,
                 'total' => $datosVenta['total'],
                 'metodo_pago' => $datosVenta['metodo_pago'],
-                'estado' => 'completada', // O el estado que corresponda
+                'estado' => 'completada',
             ]);
 
             // 4. Crear los detalles de la venta y descontar el stock.
@@ -72,6 +92,11 @@ class VentaService
                 $bodega->articles()->updateExistingPivot($item['id'], [
                     'stock' => DB::raw("stock - {$item['cantidad']}")
                 ]);
+            }
+
+            // 5. Si la venta es a crédito, actualizamos la deuda del cliente.
+            if ($venta->metodo_pago === 'credito') {
+                $venta->cliente->increment('deuda_actual', $venta->total);
             }
 
             return $venta;
