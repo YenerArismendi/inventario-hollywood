@@ -9,15 +9,16 @@ use Illuminate\Database\Eloquent\Model;
 class Article extends Model
 {
     use HasFactory;
+
     protected $table = 'articles';
     protected $primaryKey = 'id';
-    protected $fillable = ['nombre', 'tipo', 'codigo', 'descripcion', 'precio', 'cantidad_total', 'unidad_medida', 'imagen', 'estado', 'temporada', 'proveedor_id', 'tipo_detalle'];
+    protected $fillable = ['nombre', 'tipo', 'codigo', 'descripcion', 'precio', 'unidad_medida', 'imagen', 'estado', 'temporada', 'proveedor_id', 'tipo_detalle'];
+
     // Relación con proveedor
     public function proveedor()
     {
         return $this->belongsTo(Suppliers::class, 'proveedor_id');
     }
-
 
 
     public function variantes()
@@ -31,8 +32,9 @@ class Article extends Model
     public function bodegas()
     {
         return $this->belongsToMany(Bodega::class, 'bodega_article')
-            ->withPivot('stock') // ¡Importante para acceder al stock!
+            ->using(BodegaArticle::class)
+            ->as('pivot')
+            ->withPivot('stock')
             ->withTimestamps();
     }
-
 }

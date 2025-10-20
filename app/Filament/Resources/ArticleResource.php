@@ -89,10 +89,6 @@ class ArticleResource extends Resource
                 ->numeric()
                 ->suffix('COP'),
 
-            Forms\Components\TextInput::make('cantidad_total')
-                ->label('Cantidad total')
-                ->numeric(),
-
             Forms\Components\Select::make('unidad_medida')
                 ->options([
                     'kilo' => 'Kilo',
@@ -192,21 +188,27 @@ class ArticleResource extends Resource
                     })
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('cantidad_total')
-                    ->label('Cantidad total')
-                    ->limit(20)
+                Tables\Columns\TextColumn::make('bodegas_sum_stock')
+                    ->label('Stock Total')
+                    ->numeric()
+                    ->sortable()
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('unidad_medida')
-                    ->label('Unidad'),
-
-                Tables\Columns\TextColumn::make('proveedor.name')
-                    ->label('Proveedor')
-                    ->searchable(), // 👈 importante si quieres buscar por proveedor
             ])
             ->filters([])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('detalles')
+                    ->label('')
+                    ->icon('heroicon-o-information-circle')
+                    ->modalContent(fn(Article $record): \Illuminate\Contracts\View\View => view('filament.resources.article-resource.modals.stock-details', ['record' => $record])
+                    )
+                    ->modalHeading(fn(Article $record) => 'Stock de ' . $record->nombre)
+                    ->modalCancelActionLabel('Cerrar')
+                    ->modalSubmitAction(false)
+                    ->action(null),
+
+                Tables\Actions\EditAction::make()
+                    ->label(''),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -220,7 +222,11 @@ class ArticleResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $user = auth()->user();
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()->select('articles.*') // Aseguramos seleccionar todas las columnas de articles
+        ->selectSub(
+            'select sum(stock) from bodega_article where article_id = articles.id',
+            'bodegas_sum_stock'
+        );
 
         if (!$user || $user->hasRole('admin')) {
             return $query;

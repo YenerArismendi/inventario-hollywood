@@ -41,7 +41,9 @@ class Bodega extends Model
     public function articles(): BelongsToMany
     {
         return $this->belongsToMany(Article::class, 'bodega_article')
-            ->withPivot('stock') // ¡Crucial para acceder a la cantidad de stock!
+            ->using(BodegaArticle::class)
+            ->as('pivot')
+            ->withPivot('stock')
             ->withTimestamps();
     }
 

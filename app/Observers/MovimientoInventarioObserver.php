@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Models\Bodega;
 use App\Models\MovimientoInventario;
 use Illuminate\Support\Facades\DB;
 
@@ -25,23 +26,21 @@ class MovimientoInventarioObserver
         if ($movimiento->isDirty('estado') && $movimiento->estado === 'confirmado') {
 
             // Usamos una transacción para asegurar la integridad de los datos.
-            // Si algo falla, todo se revierte.
             DB::transaction(function () use ($movimiento) {
-                $inventario = DB::table('bodega_producto')
-                    ->where('bodega_id', $movimiento->bodega_id)
-                    ->where('producto_id', $movimiento->producto_id);
-
-                // Si ya existe un registro de inventario para este producto en esta bodega, lo incrementamos.
-                // Si no, creamos el registro con la cantidad del movimiento.
-                $inventario->exists()
-                    ? $inventario->increment('cantidad', $movimiento->cantidad)
-                    : DB::table('bodega_producto')->insert([
-                    'bodega_id' => $movimiento->bodega_id,
-                    'producto_id' => $movimiento->producto_id,
-                    'cantidad' => $movimiento->cantidad,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+                // Obtenemos la bodega y usamos la relación para actualizar el stock.
+                $bodega = Bodega::find($movimiento->bodega_id);
+                if ($bodega) {
+                    // Verificamos si el artículo ya está en la bodega
+                    if ($bodega->articles()->where('article_id', $movimiento->article_id)->exists()) {
+                        // Si existe, incrementamos el stock
+                        $bodega->articles()->updateExistingPivot($movimiento->article_id, [
+                            'stock' => DB::raw("stock + {$movimiento->cantidad}")
+                        ]);
+                    } else {
+                        // Si no existe, lo adjuntamos con el stock inicial
+                        $bodega->articles()->attach($movimiento->article_id, ['stock' => $movimiento->cantidad]);
+                    }
+                }
             });
         }
     }

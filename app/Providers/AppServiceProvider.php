@@ -2,17 +2,17 @@
 
 namespace App\Providers;
 
+use App\Models\Bodega;
+use App\Models\BodegaArticle;
+use App\Models\MovimientoInventario;
+use App\Observers\BodegaArticleObserver;
+use App\Observers\BodegaObserver;
+use App\Observers\MovimientoInventarioObserver;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Filament\Support\Facades\FilamentView;
-use App\Models\Bodega;
-use App\Models\MovimientoInventario;
-use App\Observers\BodegaObserver;
-use App\Observers\MovimientoInventarioObserver;
-use Filament\Support\Facades\FilamentAsset;
-use Filament\Support\Assets\Js;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -43,7 +43,6 @@ class AppServiceProvider extends ServiceProvider
         // Observadores de modelos
         Bodega::observe(BodegaObserver::class);
         MovimientoInventario::observe(MovimientoInventarioObserver::class);
+        BodegaArticle::observe(BodegaArticleObserver::class);
     }
-
-    
 }
