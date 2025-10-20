@@ -24,4 +24,5 @@ class Compra extends Model
     {
         return $this->hasMany(CompraDetalles::class);
     }
+
 }

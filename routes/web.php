@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\CompraController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -38,3 +39,5 @@ Route::post('/logout', function (Request $request) {
     // Devuelve una respuesta exitosa.
     return response()->json(['message' => 'Sesión cerrada correctamente.']);
 })->middleware('auth');
+
+Route::post('/compras', [CompraController::class, 'store'])->name('compras.store');

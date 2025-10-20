@@ -55,5 +55,7 @@
 *sail artisan make:filament-resource (Se coloca el modelo creado)
 *php artisan make:policy NombrePolicy --model=Nombre para crear las políticas de restricción para los modulos.
 
++INICIAR DOCKER CON CONSOLA 
+*docker start $(docker ps -aq)
 
 

@@ -3,10 +3,11 @@
 namespace App\Filament\Resources\CompraResource\Pages;
 
 use App\Filament\Resources\CompraResource;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
+use App\Models\Insumo;
 
 class CreateCompra extends CreateRecord
 {
     protected static string $resource = CompraResource::class;
+
 }

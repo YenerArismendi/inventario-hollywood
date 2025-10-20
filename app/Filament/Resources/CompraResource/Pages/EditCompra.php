@@ -5,6 +5,7 @@ namespace App\Filament\Resources\CompraResource\Pages;
 use App\Filament\Resources\CompraResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
+use App\Models\Insumo;
 
 class EditCompra extends EditRecord
 {
@@ -16,4 +17,5 @@ class EditCompra extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
+
 }

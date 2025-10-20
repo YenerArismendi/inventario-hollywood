@@ -11,6 +11,8 @@ use App\Models\Bodega;
 use App\Models\MovimientoInventario;
 use App\Observers\BodegaObserver;
 use App\Observers\MovimientoInventarioObserver;
+use Filament\Support\Facades\FilamentAsset;
+use Filament\Support\Assets\Js;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -35,11 +37,13 @@ class AppServiceProvider extends ServiceProvider
         // Inyectar el dropdown en el topbar de Filament
         FilamentView::registerRenderHook(
             PanelsRenderHook::TOPBAR_START,
-            fn (): string => Blade::render('@livewire("topbar.bodega-selector")')
+            fn(): string => Blade::render('@livewire("topbar.bodega-selector")')
         );
 
         // Observadores de modelos
         Bodega::observe(BodegaObserver::class);
         MovimientoInventario::observe(MovimientoInventarioObserver::class);
     }
+
+    
 }
