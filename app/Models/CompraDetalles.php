@@ -52,7 +52,6 @@ class CompraDetalles extends Model
         });
     }
 
-
     public function insumo()
     {
         return $this->belongsTo(Insumo::class, 'insumo_id');

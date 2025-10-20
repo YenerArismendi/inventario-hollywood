@@ -10,4 +10,9 @@ class CreateCompra extends CreateRecord
 {
     protected static string $resource = CompraResource::class;
 
+
+    protected function getFormActions(): array
+    {
+        return []; // Esto quita el botón “Crear” de Filament
+    }
 }

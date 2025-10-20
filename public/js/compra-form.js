@@ -218,8 +218,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
         try {
-            const response = await fetch(RUTA_COMPRAS_STORE, {
-                method: 'POST',
+            const url = COMPRA_ID ? RUTA_COMPRAS_UPDATE : RUTA_COMPRAS_STORE;
+            const method = COMPRA_ID ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method,
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',

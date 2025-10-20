@@ -36,10 +36,10 @@ class CompraController extends Controller
         $insumosJson = json_encode($insumos, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
         $detallesJson = json_encode($detalles, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
 
-        return view('compras.form', [
+        return view('filament.compra.tabla-insumos', [
             'insumosJson' => $insumosJson,
             'compra' => $compra,
-            'detallesJson' => $detallesJson,
+            'detallesJson' => $detallesJson,    
         ]);
     }
 

@@ -5,15 +5,17 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\CompraResource\Pages;
 use App\Models\Compra;
 use App\Models\Insumo;
+use App\Models\Suppliers;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\ViewField;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\DatePicker;
 use Filament\Tables;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\ViewField;
 
 class CompraResource extends Resource
 {
@@ -30,37 +32,39 @@ class CompraResource extends Resource
     {
         return $form
             ->schema([
-                Section::make('Detalles de Insumos')
+                Section::make('Detalles de la compra')
                     ->schema([
-                        ViewField::make('tabla-insumos')
+
+                        // Campo oculto para los detalles JSON
+                        Hidden::make('detalles_json')
+                            ->default('[]'),
+
+                        // Tu tabla de insumos como ViewField
+                        ViewField::make('tabla_insumos')
                             ->view('filament.compra.tabla-insumos')
-                            ->viewData([
-                                'insumos' => \App\Models\Insumo::all(),
-                            ])
-                            ->afterStateHydrated(function ($component, $state, $record) {
-                                if (!$record) {
-                                    $component->state([
-                                        'detallesJson' => '[]',
-                                    ]);
-                                    return;
-                                }
+                            ->viewData(function ($record) {
+                                $insumos = Insumo::select('id', 'nombre')->get();
 
-                                $detalles = $record->detalles()->with('insumo')->get()->map(function ($detalle) {
-                                    return [
-                                        'insumo_id' => $detalle->insumo_id,
-                                        'nombre' => $detalle->insumo->nombre ?? '',
-                                        'cantidad' => $detalle->cantidad,
-                                        'costo_unitario' => $detalle->costo_unitario,
-                                        'costo_total' => $detalle->costo_total,
-                                    ];
-                                });
+                                $detalles = $record
+                                    ? $record->detalles()->with('insumo')->get()->map(function ($d) {
+                                        return [
+                                            'insumo_id' => $d->insumo_id,
+                                            'nombre' => $d->insumo->nombre ?? '',
+                                            'cantidad' => $d->cantidad,
+                                            'costo_unitario' => $d->costo_unitario,
+                                            'costo_total' => $d->costo_total,
+                                        ];
+                                    })->toArray()
+                                    : [];
 
-                                $component->state([
+                                return [
+                                    'insumosJson' => json_encode($insumos, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP),
                                     'detallesJson' => json_encode($detalles, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP),
-                                ]);
+                                    'compra' => $record,
+                                    'compraId' => $record?->id,
+                                ];
                             }),
                     ]),
-
             ])
             ->extraAttributes(['id' => 'compra-form']);
     }

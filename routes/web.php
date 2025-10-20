@@ -41,3 +41,5 @@ Route::post('/logout', function (Request $request) {
 })->middleware('auth');
 
 Route::post('/compras', [CompraController::class, 'store'])->name('compras.store');
+Route::put('/filament/resources/compras/{record}', [CompraController::class, 'update'])->name('compras.update');
+
