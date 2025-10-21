@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ Script de Compras cargado correctamente.');
 
+    console.log(COMPRA_ID)
     // === Función para mostrar notificaciones con Toastify ===
     const showToast = (message, type = 'info') => {
         if (typeof Toastify === 'undefined') {
@@ -235,7 +236,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok && result.success) {
                 showToast('🎉 Compra guardada correctamente.', 'success');
-                setTimeout(() => location.reload(), 1000);
+                setTimeout(() => {
+                    window.location.href = '/admin/compras'; // 🔹 Redirige al listado de Filament
+                }, 1000);
             } else {
                 showToast(result.message || '❌ Error al guardar la compra.', 'error');
             }

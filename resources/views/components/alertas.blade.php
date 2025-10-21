@@ -1,30 +1,57 @@
-<!-- ✅ Toastify desde CDN -->
+<!-- Toastify -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
+<!-- FontAwesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 <style>
-    /* --- Estilo del toast --- */
-    .toastify {
-        backdrop-filter: blur(10px);
-        background: rgba(30, 30, 30, 0.7) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 14px !important;
-        font-size: 1.05rem;
-        padding: 1rem 1.5rem;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    /* 🔹 Contenedor fijo en la parte superior derecha */
+    #toast-container {
+        position: fixed;
+        top: 1.2rem;
+        right: 1.2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 12px;
+        z-index: 99999;
+        pointer-events: none;
+    }
+
+    /* 🔹 Estilo general del toast */
+    .custom-toast {
+        border-radius: 12px;
+        font-size: 1rem;
+        padding: 0.9rem 1.3rem;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
         color: #fff;
         display: flex;
         align-items: center;
         gap: 10px;
         min-width: 320px;
-        overflow: hidden;
         position: relative;
-        z-index: 9999;
+        overflow: hidden;
         pointer-events: all;
+        animation: fadeInRight 0.35s ease-out;
     }
 
-    /* --- Barra de progreso --- */
-    .toastify::after {
+    /* 🔹 Colores por tipo */
+    .toast-success {
+        background: linear-gradient(135deg, #16a34a, #4ade80);
+    }
+
+    .toast-error {
+        background: linear-gradient(135deg, #dc2626, #ef4444);
+    }
+
+    .toast-warning {
+        background: linear-gradient(135deg, #f59e0b, #facc15);
+        color: #000;
+    }
+
+    /* 🔹 Barra de progreso */
+    .custom-toast::after {
         content: "";
         position: absolute;
         left: 0;
@@ -32,19 +59,20 @@
         height: 5px;
         width: 100%;
         animation: progressBar 4s linear forwards;
-        border-radius: 0 0 14px 14px;
+        border-radius: 0 0 12px 12px;
+        opacity: 0.9;
     }
 
     .toast-success::after {
-        background: linear-gradient(to right, #00c853, #b2ff59);
+        background: linear-gradient(to right, #15803d, #86efac);
     }
 
     .toast-error::after {
-        background: linear-gradient(to right, #ff1744, #d50000);
+        background: linear-gradient(to right, #b91c1c, #f87171);
     }
 
     .toast-warning::after {
-        background: linear-gradient(to right, #ff9800, #ffb74d);
+        background: linear-gradient(to right, #ca8a04, #fde047);
     }
 
     @keyframes progressBar {
@@ -52,57 +80,54 @@
         to { width: 0%; }
     }
 
-    /* --- Contenedor global forzado --- */
-    .toastify-right.toastify-top {
-        position: fixed !important;
-        top: 1.2rem !important;
-        right: 1.2rem !important;
-        left: auto !important;
-        z-index: 99999 !important;
+    /* 🔹 Animaciones */
+    @keyframes fadeInRight {
+        from {
+            opacity: 0;
+            transform: translateX(40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes fadeOutRight {
+        from {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateX(40px);
+        }
     }
 </style>
 
+<!-- 🔹 Contenedor -->
+<div id="toast-container"></div>
+
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        window.showToast = (type, message) => {
-            let bgClass = 'toast-success';
-            let icon = '<i class="fa-solid fa-check-circle"></i>';
+document.addEventListener('DOMContentLoaded', () => {
+    window.showToast = (type, message) => {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.classList.add('custom-toast', `toast-${type}`);
 
-            switch (type) {
-                case 'error':
-                    bgClass = 'toast-error';
-                    icon = '<i class="fa-solid fa-circle-xmark"></i>';
-                    break;
-                case 'warning':
-                    bgClass = 'toast-warning';
-                    icon = '<i class="fa-solid fa-triangle-exclamation"></i>';
-                    break;
-            }
+        let icon = '<i class="fa-solid fa-check-circle"></i>';
+        if (type === 'error') icon = '<i class="fa-solid fa-circle-xmark"></i>';
+        else if (type === 'warning') icon = '<i class="fa-solid fa-triangle-exclamation"></i>';
 
-            Toastify({
-                text: `${icon} ${message}`,
-                className: bgClass,
-                gravity: "top",
-                position: "right", // ✅ Mantiene posición derecha
-                stopOnFocus: true,
-                escapeMarkup: false, // Permite HTML (íconos)
-                duration: 4000,
-                offset: {
-                    x: 20,
-                    y: 20
-                },
-                style: {
-                    background: "rgba(30, 30, 30, 0.7)",
-                    borderRadius: "14px",
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
-                    color: "#fff",
-                }
-            }).showToast();
-        };
+        toast.innerHTML = `${icon} ${message}`;
+        container.appendChild(toast);
 
-        console.log("✅ Sistema de alertas Toastify listo (posición derecha confirmada)");
-    });
+        // 🔹 Auto eliminar con animación
+        setTimeout(() => {
+            toast.style.animation = "fadeOutRight 0.35s ease-in forwards";
+            setTimeout(() => toast.remove(), 350);
+        }, 4000);
+    };
+
+    console.log("✅ Alertas sólidas activadas en la parte superior derecha");
+});
 </script>
-
-<!-- FontAwesome para íconos -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
