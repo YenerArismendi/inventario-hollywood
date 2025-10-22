@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class RecetaDetalles extends Model
 {
 
-    Protected $table = 'receta_detalles';
-    Protected $primaryKey = 'id';
-    Protected $fillable = ['receta_id', 'insumos_id', 'cantidad', 'unidad'];
+    protected $table = 'receta_detalles';
+    protected $primaryKey = 'id';
+    protected $fillable = ['receta_id', 'insumos_id', 'cantidad', 'unidad'];
 
 
     public function receta()

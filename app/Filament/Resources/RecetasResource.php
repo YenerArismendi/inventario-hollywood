@@ -117,17 +117,22 @@ class RecetasResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('created_at', 'desc') // 🔹 Ordena las recetas más recientes primero
             ->columns([
+
                 Tables\Columns\TextColumn::make('nombre')
                     ->label('Nombre de la Receta')
+                    ->icon('heroicon-o-book-open')
                     ->searchable()
                     ->sortable()
+                    ->weight('bold')
                     ->limit(25),
 
                 Tables\Columns\TextColumn::make('tipo')
                     ->label('Tipo')
+                    ->icon('heroicon-o-beaker')
+                    ->badge()
                     ->sortable()
-                    ->badge() // Muestra un estilo tipo etiqueta
                     ->color(fn(string $state): string => match ($state) {
                         'california' => 'success',
                         'acrilico' => 'info',
@@ -137,52 +142,120 @@ class RecetasResource extends Resource
                     }),
 
                 Tables\Columns\TextColumn::make('precio')
-                    ->label('Precio Venta')
+                    ->label('💲 Precio Venta')
                     ->formatStateUsing(fn($state) => '$' . number_format($state, 0, ',', '.'))
+                    ->sortable()
+                    ->color('success')
+                    ->weight('medium'),
+
+                Tables\Columns\TextColumn::make('costo_total')
+                    ->label('💰 Costo Total')
+                    ->formatStateUsing(fn($record) => '$' . number_format($record->costo_total, 0, ',', '.'))
+                    ->sortable()
+                    ->color('warning'),
+
+                Tables\Columns\TextColumn::make('resultado')
+                    ->label('📊 Resultado')
+                    ->getStateUsing(function ($record) {
+                        $precioVenta = (float) $record->precio;
+                        $costoTotal = (float) $record->costo_total; // usa el accessor del modelo
+                        $diferencia = $precioVenta - $costoTotal;
+
+                        if ($diferencia > 0) {
+                            return 'Ganancia: $' . number_format($diferencia, 0, ',', '.');
+                        } elseif ($diferencia < 0) {
+                            return 'Pérdida: $' . number_format(abs($diferencia), 0, ',', '.');
+                        } else {
+                            return 'Sin ganancia';
+                        }
+                    })
+                    ->badge()
+                    ->icon(
+                        fn($record) =>
+                        $record->precio > $record->costo_total
+                            ? 'heroicon-o-arrow-trending-up'
+                            : ($record->precio < $record->costo_total
+                                ? 'heroicon-o-arrow-trending-down'
+                                : 'heroicon-o-minus')
+                    )
+                    ->color(
+                        fn($record) =>
+                        $record->precio > $record->costo_total
+                            ? 'success'
+                            : ($record->precio < $record->costo_total
+                                ? 'danger'
+                                : 'gray')
+                    )
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('detalles.insumo')
-                    ->label('Insumos')
+                    ->label('🧪 Insumos')
+
                     ->formatStateUsing(function ($state, $record) {
-                        // Si no hay relación detalles, devolvemos texto vacío
-                        if (!$record->detalles) {
+                        if (!$record->relationLoaded('detalles')) {
+                            $record->load('detalles.insumo');
+                        }
+
+                        if (!$record->detalles || $record->detalles->isEmpty()) {
                             return '—';
                         }
 
                         $insumos = $record->detalles->pluck('insumo.nombre')->filter()->toArray();
 
-                        if (empty($insumos)) {
-                            return '—';
-                        }
-
-                        // Mostramos hasta 3 insumos
-                        return implode(', ', array_slice($insumos, 0, 3))
+                        // Mostramos máximo 3 insumos
+                        $texto = implode(', ', array_slice($insumos, 0, 3))
                             . (count($insumos) > 3 ? '...' : '');
+
+                        // Agregamos el ícono del ojo como botón
+                        $url = route('filament.admin.resources.recetas.view', $record);
+                        $icono = '<a href="' . $url . '" 
+                    class="inline-flex items-center text-blue-600 hover:text-blue-800 ml-2"
+                    title="Ver receta">
+                    <x-heroicon-o-eye class="w-4 h-4"/>
+                  </a>';
+
+                        return $texto . $icono;
                     })
                     ->tooltip(function ($record) {
-                        if (!$record->detalles) {
-                            return null;
-                        }
-
+                        if (!$record->detalles) return null;
                         return $record->detalles->pluck('insumo.nombre')->filter()->join(', ');
                     })
                     ->wrap()
-                    ->limit(30),
+                    ->html() // 🔹 Importante: permite renderizar el enlace con el ícono
+                    ->limit(30)
+                    ->color('gray'),
 
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('Creado')
+                    ->label('📅 Creado')
                     ->dateTime('d/m/Y H:i')
-                    ->sortable(),
+                    ->sortable()
+                    ->color('gray'),
+
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ViewAction::make()
+                    ->label('Ver')
+                    ->icon('heroicon-o-eye')
+                    ->color('info'),
+
+                Tables\Actions\EditAction::make()
+                    ->label('Editar')
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('warning'),
+
+                Tables\Actions\DeleteAction::make()
+                    ->label('Eliminar')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->label('Eliminar seleccionados'),
                 ]),
             ]);
     }
+
 
     public static function getRelations(): array
     {
