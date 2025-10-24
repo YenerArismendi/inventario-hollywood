@@ -55,7 +55,7 @@ class AdminPanelProvider extends PanelProvider
                 \Filament\Http\Middleware\DisableBladeIconComponents::class,
                 \Filament\Http\Middleware\DispatchServingFilamentEvent::class,
                 \App\Http\Middleware\CheckUserActive::class,
-                \App\Http\Middleware\EnsureUserIsAdmin::class,
+                // \App\Http\Middleware\EnsureUserIsAdmin::class,
             ])
             ->plugins([
                 FilamentShieldPlugin::make(),
