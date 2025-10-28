@@ -15,9 +15,9 @@ return new class extends Migration {
             $table->renameColumn('monto_final_calculado', 'monto_final_efectivo_calculado');
 
             // Añadimos las nuevas columnas después de 'monto_inicial'
-            $table->decimal('total_ventas_efectivo', 10, 2)->default(0)->after('monto_inicial');
-            $table->decimal('total_ventas_transferencia', 10, 2)->default(0)->after('total_ventas_efectivo');
-            $table->decimal('total_ventas_credito', 10, 2)->default(0)->after('total_ventas_tarjeta');
+            $table->decimal('total_ventas_efectivo', 10, 2)->default(0);
+            $table->decimal('total_ventas_transferencia', 10, 2)->default(0);
+            $table->decimal('total_ventas_credito', 10, 2)->default(0);
         });
     }
 
