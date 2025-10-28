@@ -22,7 +22,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+            // Es crucial eliminar la llave foránea antes que la columna.
+            $table->dropForeign(['active_bodega_id']);
+            $table->dropColumn('active_bodega_id');
         });
     }
 };

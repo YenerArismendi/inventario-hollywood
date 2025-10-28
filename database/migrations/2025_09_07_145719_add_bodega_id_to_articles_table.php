@@ -22,7 +22,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('articles', function (Blueprint $table) {
-            //
+            // Para un rollback limpio, primero se elimina la llave foránea y luego la columna.
+            $table->dropForeign(['bodega_id']);
+            $table->dropColumn('bodega_id');
         });
     }
 };
