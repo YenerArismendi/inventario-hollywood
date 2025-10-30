@@ -15,11 +15,12 @@ class UserSeeder extends Seeder
         $adminUser = User::firstOrCreate(
             ['email' => 'admin@hollywood.com'],
             [
-                'name' => 'Super Admin',
+                'name' => 'admin',
                 'password' => Hash::make('password'), // ¡Cambiar en producción!
             ]
         );
-        // Asignar el rol 'super_admin', que ya fue creado y configurado por RolesAndPermissionsSeeder
-        $adminUser->assignRole('super_admin');
+
+        // Asignar el rol de 'admin' al usuario
+        $adminUser->assignRole('admin');
     }
 }
