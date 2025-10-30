@@ -45,7 +45,7 @@ class User extends Authenticatable implements FilamentUser
      * Define si el usuario puede acceder al panel de Filament (Filament v3).
      * @param \Filament\Panel $panel
      * @return bool
- */
+     */
     public function canAccessPanel(\Filament\Panel $panel): bool
     {
         // Devuelve 'true' si el usuario tiene el rol de 'super_admin'.
@@ -60,17 +60,17 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsToMany(Bodega::class, 'bodega_user');
     }
 
-    public function ventas()
+    public function ventas(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Venta::class);
     }
 
-    public function sesionesCaja()
+    public function sesionesCaja(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(SesionCaja::class);
     }
 
-    public function sesionCajaActiva()
+    public function sesionCajaActiva(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(SesionCaja::class)->where('estado', 'abierta');
     }
