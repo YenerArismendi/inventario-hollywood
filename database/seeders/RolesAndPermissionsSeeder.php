@@ -51,10 +51,10 @@ class RolesAndPermissionsSeeder extends Seeder
         // --- Permisos Personalizados ---
         Permission::firstOrCreate(['name' => 'change_bodega']);
 
-        // Crear o encontrar el rol admin
-        $adminRole = Role::firstOrCreate(['name' => 'admin']);
+        // Crear o encontrar el rol super_admin
+        $superAdminRole = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
 
-        // Asignar todos los permisos disponibles al rol admin
-        $adminRole->syncPermissions(Permission::all());
+        // Asignar todos los permisos disponibles al rol super_admin
+        $superAdminRole->syncPermissions(Permission::all());
     }
 }
