@@ -2,16 +2,14 @@
 
 namespace App\Models;
 
-use Filament\Panel;
+use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Traits\HasRoles;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     use HasRoles, HasFactory, Notifiable;
 
@@ -42,6 +40,18 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Define si el usuario puede acceder al panel de Filament (Filament v3).
+     * @param \Filament\Panel $panel
+     * @return bool
+ */
+    public function canAccessPanel(\Filament\Panel $panel): bool
+    {
+        // Devuelve 'true' si el usuario tiene el rol de 'super_admin'.
+        return $this->hasRole('super_admin');
+    }
+
     /**
      * Obtiene la bodega asignada al usuario.
      */
