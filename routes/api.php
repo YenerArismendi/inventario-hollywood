@@ -30,3 +30,4 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     // Rutas para Clientes
     Route::get('/clientes', [ClienteController::class, 'index']);
 });
+
