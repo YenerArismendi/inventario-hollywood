@@ -88,7 +88,8 @@ class BodegaResource extends Resource
     public static function getRelations(): array
     {
         return [
-            ArticlesRelationManager::class,
+            RelationManagers\EstantesRelationManager::class,
+            // RelationManagers\UbicacionesRelationManager::class,
         ];
     }
 

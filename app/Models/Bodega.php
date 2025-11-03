@@ -12,7 +12,7 @@ class Bodega extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nombre', 'direccion', 'tipo', 'encargado_id'];
+    protected $fillable = ['nombre', 'direccion', 'tipo', 'encargado_id', 'filas', 'columnas'];
 
     /**
      * Obtiene el usuario encargado de la bodega.
@@ -22,13 +22,18 @@ class Bodega extends Model
         return $this->belongsTo(User::class, 'encargado_id');
     }
 
+    public function estantes()  
+    {
+        return $this->hasMany(Estante::class);
+    }
+
     /**
      * Una Bodega puede tener muchos Usuarios (supervisores, empleados).
      */
-//    public function users(): HasMany
-//    {
-//        return $this->hasMany(User::class);
-//    }
+    //    public function users(): HasMany
+    //    {
+    //        return $this->hasMany(User::class);
+    //    }
 
     public function users()
     {
@@ -45,6 +50,12 @@ class Bodega extends Model
             ->as('pivot')
             ->withPivot('stock')
             ->withTimestamps();
+    }
+
+
+    public function ubicaciones()
+    {
+        return $this->hasManyThrough(Ubicacion::class, Estante::class);
     }
 
     /**
