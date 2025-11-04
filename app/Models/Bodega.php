@@ -43,7 +43,7 @@ class Bodega extends Model
         return $this->belongsToMany(Article::class, 'bodega_article')
             ->using(BodegaArticle::class)
             ->as('pivot')
-            ->withPivot('stock')
+            ->withPivot('stock', 'columna', 'fila')
             ->withTimestamps();
     }
 

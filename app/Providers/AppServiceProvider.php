@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Bodega;
 use App\Models\BodegaArticle;
 use App\Models\MovimientoInventario;
+use App\Models\Article;
 use App\Observers\BodegaArticleObserver;
 use App\Observers\BodegaObserver;
 use App\Observers\MovimientoInventarioObserver;
@@ -44,5 +45,8 @@ class AppServiceProvider extends ServiceProvider
         Bodega::observe(BodegaObserver::class);
         MovimientoInventario::observe(MovimientoInventarioObserver::class);
         BodegaArticle::observe(BodegaArticleObserver::class);
+
+        // Registrar el observador para el modelo Article
+         Article::observe(\App\Observers\ArticleObserver::class);
     }
 }

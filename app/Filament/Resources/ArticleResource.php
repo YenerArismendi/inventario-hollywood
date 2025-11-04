@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ArticleResource\Pages;
 use App\Models\Article;
+use App\Models\Category;
 use App\Models\Suppliers;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -29,63 +30,43 @@ class ArticleResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\TextInput::make('nombre')
-                ->label('Nombre del producto')
-                ->reactive()
-                ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                    $tipoDetalle = $get('tipo_detalle');
-                    if (!empty($state) && !empty($tipoDetalle)) {
-                        $codigo = \App\Helpers\ProductHelper::generarCodigoProducto($state, $tipoDetalle);
-                        $set('codigo', $codigo);
-                    }
-                }),
-            Forms\Components\Select::make('tipo')
-                ->options([
-                    'producto' => 'Producto',
-                    'insumo' => 'Insumo',
+            Forms\Components\TextInput::make('nombre')->label('Nombre del producto')->reactive()->live(onBlur: true),
+            Forms\Components\TextInput::make('codigo_barras')
+                ->label('Código de Barras (Opcional)')
+                ->unique(Article::class, 'codigo_barras', ignoreRecord: true)
+                ->placeholder('Escanear o digitar código de barras...'),
+
+            Forms\Components\Select::make('category_id')
+                ->label('Categoría')
+                ->relationship('category', 'name')
+                ->searchable()
+                ->preload()
+                ->createOptionForm([
+                    Forms\Components\TextInput::make('name')
+                        ->required()->label('Nombre de la categoría'),
                 ])
-                ->label('Tipo')
                 ->required()
-                ->reactive(), // ← importante para refrescar dependencias
-
-            // Nuevo campo condicional
-            Forms\Components\Select::make('tipo_detalle')
-                ->label('Detalle según tipo')
-                ->options(function (callable $get) {
-                    if ($get('tipo') === 'producto') {
-                        return [
-                            'fragancia' => 'Fragancia',
-                            'bolso' => 'Bolso',
-                            'crema' => 'Crema',
-                        ];
-                    } elseif ($get('tipo') === 'insumo') {
-                        return [
-                            'envase' => 'Envase',
-                            'tapa' => 'Tapa',
-                            'etiqueta' => 'Etiqueta',
-                            'liquido' => 'Liquido',
-
-                        ];
-                    }
-                    return [];
-                })
-                ->visible(fn(callable $get) => in_array($get('tipo'), ['producto', 'insumo']))
                 ->reactive()
                 ->afterStateUpdated(function ($state, callable $set, callable $get) {
                     $nombre = $get('nombre');
-                    if (!empty($state) && !empty($nombre)) {
-                        $codigo = \App\Helpers\ProductHelper::generarCodigoProducto($nombre, $state);
+                    $categoryName = Category::find($state)?->name;
+                    if (!empty($categoryName) && !empty($nombre)) {
+                        $codigo = \App\Helpers\ProductHelper::generarCodigoProducto($nombre, $categoryName);
                         $set('codigo', $codigo);
                     }
-                })
-                ->required(),
+                }),
 
             Forms\Components\TextInput::make('descripcion')
                 ->label('Descripción')
                 ->afterStateUpdated(fn($state, callable $set) => $set('descripcion', strtolower($state))),
 
-            Forms\Components\TextInput::make('precio')
-                ->label('Precio total')
+            Forms\Components\TextInput::make('costo')
+                ->label('Costo (Opcional)')
+                ->numeric()
+                ->suffix('COP'),
+
+            Forms\Components\TextInput::make('precio_venta')
+                ->label('Precio de Venta')
                 ->numeric()
                 ->suffix('COP'),
 
@@ -108,15 +89,11 @@ class ArticleResource extends Resource
                 ->createOptionForm([
                     Forms\Components\TextInput::make('name')
                         ->required()
-                        ->label('Nombre del proveedor')
-                        ->afterStateUpdated(fn($state, callable $set) => $set('name', strtolower($state))),
+                        ->label('Nombre del proveedor'),
                     Forms\Components\TextInput::make('phone')->label('Teléfono'),
-                    Forms\Components\TextInput::make('responsible')->label('Responsable')
-                        ->afterStateUpdated(fn($state, callable $set) => $set('responsible', strtolower($state))),
-                    Forms\Components\TextInput::make('email')->email()->label('Correo')
-                        ->afterStateUpdated(fn($state, callable $set) => $set('email', strtolower($state))),
-                    Forms\Components\TextInput::make('address')->label('Dirección')
-                        ->afterStateUpdated(fn($state, callable $set) => $set('address', strtolower($state))),
+                    Forms\Components\TextInput::make('responsible')->label('Responsable'),
+                    Forms\Components\TextInput::make('email')->email()->label('Correo'),
+                    Forms\Components\TextInput::make('address')->label('Dirección'),
                 ])
                 ->createOptionUsing(function (array $data) {
                     return Suppliers::create([
@@ -144,14 +121,17 @@ class ArticleResource extends Resource
                     'noviembre_black_friday' => 'Noviembre – Black Friday / Cyber Lunes',
                     'diciembre_navidad' => 'Diciembre – Navidad y Fin de año',
                 ])
-                ->searchable()
-                ->placeholder('Selecciona una temporada')
-                ->reactive()
-                ->visible(fn(callable $get) => $get('tipo') === 'producto'), // 👈 aquí la magia,
+                ->placeholder('Selecciona una temporada'),
 
             Forms\Components\TextInput::make('codigo')
                 ->label('Código del producto')
                 ->readOnly(),
+
+            // Campo para mostrar el código QR generado
+             Forms\Components\ViewField::make('codigo_qr')
+                 ->label('Código QR')
+                 ->view('filament.resources.article-resource.fields.qr-code')
+                 ->visibleOn('edit'), // Solo visible en la página de edición
         ]);
     }
 
@@ -165,9 +145,9 @@ class ArticleResource extends Resource
                     ->tooltip(fn($record) => $record->nombre)
                     ->searchable(), // 👈 habilita búsqueda en esta columna
 
-                Tables\Columns\TextColumn::make('tipo')
-                    ->label('Tipo')
-                    ->searchable(), // 👈 también aquí
+                Tables\Columns\TextColumn::make('category.name')
+                    ->label('Categoría')
+                    ->searchable(),
 
                 Tables\Columns\TextColumn::make('codigo')
                     ->label('Código')
@@ -178,8 +158,12 @@ class ArticleResource extends Resource
                     ->limit(20)
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('precio')
-                    ->label('Precio')
+                Tables\Columns\TextColumn::make('codigo_barras')
+                    ->label('Cód. Barras')
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('precio_venta')
+                    ->label('Precio Venta')
                     ->formatStateUsing(function ($state) {
                         if ($state < 100) {
                             return number_format($state, 2, ',', '.') . ' COP';
@@ -215,7 +199,7 @@ class ArticleResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->searchPlaceholder('Buscar artículo...'); // 👈 texto del buscador
+            ->searchPlaceholder('Buscar artículo...'); // texto del buscador
     }
 
 

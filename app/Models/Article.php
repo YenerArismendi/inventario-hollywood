@@ -5,31 +5,35 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-
 class Article extends Model
 {
     use HasFactory;
 
     protected $table = 'articles';
     protected $primaryKey = 'id';
-    protected $fillable = ['nombre', 'tipo', 'codigo', 'descripcion', 'precio', 'unidad_medida', 'imagen', 'estado', 'temporada', 'proveedor_id', 'tipo_detalle'];
+    protected $fillable = [
+        'nombre', 'codigo', 'codigo_barras', 'descripcion', 'costo', 'precio_venta',
+        'unidad_medida', 'imagen', 'codigo_qr', 'estado', 'temporada',
+        'category_id', 'proveedor_id'
+    ];
 
     // Relación con proveedor
-    public function proveedor()
+    public function proveedor(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Suppliers::class, 'proveedor_id');
     }
 
 
-    public function variantes()
+    // Relación con Categoría
+    public function category(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->hasMany(Variante::class);
+        return $this->belongsTo(Category::class);
     }
 
     /**
      * Un artículo puede estar en muchas bodegas, con un stock específico en cada una.
      */
-    public function bodegas()
+    public function bodegas(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(Bodega::class, 'bodega_article')
             ->using(BodegaArticle::class)

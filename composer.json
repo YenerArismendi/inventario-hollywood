@@ -19,6 +19,7 @@
         "laravel/ui": "^4.6",
         "openspout/openspout": "^4.0",
         "resend/resend-laravel": "^0.23.0",
+        "simplesoftwareio/simple-qrcode": "^4.2",
         "spatie/laravel-permission": "^6.21"
     },
     "require-dev": {

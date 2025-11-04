@@ -16,13 +16,25 @@ class ArticlesRelationManager extends RelationManager
     public function form(Form $form): Form
     {
         // Este formulario se usa para la acción de "Editar" un artículo ya adjunto.
-        // Solo debe contener campos de la tabla pivote, como el stock.
+        // Debe contener todos los campos de la tabla pivote que quieras editar.
         return $form
             ->schema([
                 Forms\Components\TextInput::make('stock')
                     ->label('Cantidad en Stock')
                     ->numeric() // Usamos numeric() para el campo de stock
                     ->required(),
+
+                // Selector para la columna del estante
+                Forms\Components\Select::make('columna')
+                    ->label('Columna')
+                    ->options(array_combine(range('A', 'Z'), range('A', 'Z')))
+                    ->searchable(),
+
+                // Selector para la fila del estante
+                Forms\Components\Select::make('fila')
+                    ->label('Fila')
+                    ->options(array_combine(range(1, 20), range(1, 20)))
+                    ->searchable(),
             ]);
     }
 
@@ -36,6 +48,12 @@ class ArticlesRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('stock')
                     ->label('Stock en esta Bodega')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('pivot.columna')
+                    ->label('Columna')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('pivot.fila')
+                    ->label('Fila')
+                    ->sortable(),
             ])
             ->filters([
                 //
@@ -44,19 +62,34 @@ class ArticlesRelationManager extends RelationManager
                 // Acción para "adjuntar" un artículo del catalogo al inventario de esta bodega
                 Tables\Actions\AttachAction::make()
                     ->label('Añadir Artículo al Inventario')
+                    ->modalHeading('Vincular Artículo')
                     ->form(fn(Tables\Actions\AttachAction $action): array => [
                         // Le decimos explícitamente dónde buscar.
                         $action->getRecordSelect()
                             ->label('Artículo del Catálogo')
                             ->searchable(['nombre', 'codigo'])
-                            ->preload(),
-                        Forms\Components\TextInput::make('stock')->numeric()->required()->default(1),
+                            ->placeholder('Seleccionar Articulo')
+                            ->preload(50)
+                            ->required(),
+                        Forms\Components\TextInput::make('stock')->numeric()->required()->default(1)->label('Cantidad Inicial'),
+
+                        // Añadimos los campos de ubicación también aquí
+                        Forms\Components\Select::make('columna')
+                            ->label('Columna')
+                            ->placeholder('Seleccionar columna')
+                            ->options(array_combine(range('A', 'Z'), range('A', 'Z')))
+                            ->searchable(),
+                        Forms\Components\Select::make('fila')
+                            ->label('Fila')
+                            ->placeholder('Seleccionar fila')
+                            ->options(array_combine(range(1, 20), range(1, 20)))
+                            ->searchable(),
                     ]),
             ])
             ->actions([
                 // Acción para editar el stock de un artículo ya en el inventario
                 Tables\Actions\EditAction::make()
-                    ->label('Editar Stock'),
+                    ->label('Editar'),
                 Tables\Actions\DetachAction::make()
                     ->label('Quitar del Inventario'),
             ])
