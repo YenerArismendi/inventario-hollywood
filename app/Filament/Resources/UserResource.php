@@ -96,9 +96,13 @@ class UserResource extends Resource
                 Forms\Components\TextInput::make('password')
                     ->label('Contraseña')
                     ->password()
-                    ->required()
-                    ->dehydrateStateUsing(fn($state) => bcrypt($state))
-                    ->visibleOn('create'),
+                    ->revealable() // 👁️ permite mostrar/ocultar la contraseña
+                    ->dehydrateStateUsing(function ($state, $record) {
+                        // Si el campo está vacío al editar, no cambia la contraseña
+                        return filled($state) ? bcrypt($state) : $record->password;
+                    })
+                    ->helperText('Déjalo en blanco si no deseas cambiar la contraseña.')
+                    ->required(fn(string $context): bool => $context === 'create'),
                 Select::make('estado')
                     ->label('Estado')
                     ->options([
