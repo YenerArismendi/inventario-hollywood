@@ -2,19 +2,20 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Article extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'articles';
     protected $primaryKey = 'id';
     protected $fillable = [
-        'nombre', 'codigo', 'codigo_barras', 'descripcion', 'costo', 'precio_venta',
+        'nombre', 'presentation', 'codigo', 'codigo_barras', 'descripcion', 'costo', 'precio_venta',
         'unidad_medida', 'imagen', 'codigo_qr', 'estado', 'temporada',
-        'category_id', 'proveedor_id'
+        'category_id', 'brand_id', 'proveedor_id'
     ];
 
     // Relación con proveedor
@@ -28,6 +29,12 @@ class Article extends Model
     public function category(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    // Relación con Marca
+    public function brand(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
     }
 
     /**

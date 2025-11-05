@@ -1,26 +1,41 @@
 <?php
+
 namespace App\Helpers;
 
 use App\Models\Article;
 
 class ProductHelper
 {
-    public static function generarCodigoProducto(string $nombre, string $tipoDetalle): string
+    /**
+     * Genera un código de producto único y descriptivo.
+     *
+     * @param string $nombre El nombre base del producto.
+     * @param string $marca El nombre de la marca.
+     * @param string|null $presentacion La presentación (ej: 120ml, 250g).
+     * @return string El código único generado.
+     */
+    public static function generarCodigoUnico(string $nombre, string $marca, ?string $presentacion): string
     {
-        // Abreviatura del tipo detalle (3 primeras letras en mayúscula)
-        $detalle = strtoupper(substr($tipoDetalle, 0, 3));
+        // Limpiar y abreviar los componentes del código
+        $nombreLimpio = preg_replace('/[^a-zA-Z0-9]/', '', $nombre);
+        $marcaLimpia = preg_replace('/[^a-zA-Z0-9]/', '', $marca);
+        $presentacionLimpia = preg_replace('/[^a-zA-Z0-9]/', '', $presentacion ?? '');
 
-        // Abreviatura del nombre (3 primeras letras en mayúscula)
-        $abreviadoNombre = strtoupper(substr($nombre, 0, 3));
+        $nombreCorto = strtoupper(substr($nombreLimpio, 0, 3));
+        $marcaCorta = strtoupper(substr($marcaLimpia, 0, 3));
+        $presentacionCorta = strtoupper(substr($presentacionLimpia, 0, 3));
 
-        // Buscar el consecutivo de ese detalle en la BD
-        $count = Article::where('tipo_detalle', $tipoDetalle)->count() + 1;
+        do {
+            // Añadimos un componente aleatorio para asegurar la unicidad
+            $aleatorio = strtoupper(substr(bin2hex(random_bytes(4)), 0, 4));
+            $codigoBase = "{$marcaCorta}-{$nombreCorto}-{$presentacionCorta}-{$aleatorio}";
+            $codigo = rtrim(str_replace('--', '-', $codigoBase), '-');
 
-        // Formatear el consecutivo en 3 dígitos (001, 002, ...)
-        $consecutivo = str_pad($count, 3, '0', STR_PAD_LEFT);
+            // Comprobar si el código ya existe en la base de datos
+            $existe = Article::where('codigo', $codigo)->exists();
+        } while ($existe);
 
-        // Construir el código final
-        return "{$detalle}-{$abreviadoNombre}-{$consecutivo}";
+        return $codigo;
     }
 }
 

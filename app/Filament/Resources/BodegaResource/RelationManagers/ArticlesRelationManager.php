@@ -45,8 +45,14 @@ class ArticlesRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('nombre'),
                 Tables\Columns\TextColumn::make('codigo')->label('Codigo'),
                 // Esta columna especial muestra el dato de la tabla pivote
-                Tables\Columns\TextColumn::make('stock')
+                Tables\Columns\TextColumn::make('pivot.stock')
                     ->label('Stock en esta Bodega')
+                    ->badge()
+                    ->color(fn(int $state): string => match (true) {
+                        $state === 0 => 'danger',
+                        $state < 10 => 'warning',
+                        default => 'success',
+                    })
                     ->sortable(),
                 Tables\Columns\TextColumn::make('pivot.columna')
                     ->label('Columna')
@@ -68,6 +74,7 @@ class ArticlesRelationManager extends RelationManager
                         $action->getRecordSelect()
                             ->label('Artículo del Catálogo')
                             ->searchable(['nombre', 'codigo'])
+                            ->getOptionLabelFromRecordUsing(fn($record) => "{$record->nombre} (Cód: {$record->codigo})")
                             ->placeholder('Seleccionar Articulo')
                             ->preload(50)
                             ->required(),

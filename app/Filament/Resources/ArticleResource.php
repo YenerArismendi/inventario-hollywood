@@ -6,14 +6,14 @@ use App\Filament\Resources\ArticleResource\Pages;
 use App\Models\Article;
 use App\Models\Category;
 use App\Models\Suppliers;
+use App\Models\Brand;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-
-//use App\Filament\Widgets\ArticleVariantsStats;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ArticleResource extends Resource
 {
@@ -30,7 +30,14 @@ class ArticleResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\TextInput::make('nombre')->label('Nombre del producto')->reactive()->live(onBlur: true),
+            Forms\Components\TextInput::make('nombre')
+                ->label('Nombre del producto')
+                ->reactive()
+                ->live(onBlur: true),
+            Forms\Components\TextInput::make('presentation')
+                ->label('Presentación (Ej: 120ml, 200g, Cartera Mediana)')
+                ->reactive()
+                ->live(onBlur: true),
             Forms\Components\TextInput::make('codigo_barras')
                 ->label('Código de Barras (Opcional)')
                 ->unique(Article::class, 'codigo_barras', ignoreRecord: true)
@@ -46,15 +53,16 @@ class ArticleResource extends Resource
                         ->required()->label('Nombre de la categoría'),
                 ])
                 ->required()
-                ->reactive()
-                ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                    $nombre = $get('nombre');
-                    $categoryName = Category::find($state)?->name;
-                    if (!empty($categoryName) && !empty($nombre)) {
-                        $codigo = \App\Helpers\ProductHelper::generarCodigoProducto($nombre, $categoryName);
-                        $set('codigo', $codigo);
-                    }
-                }),
+                ->reactive(),
+            Forms\Components\Select::make('brand_id')
+                ->label('Marca')
+                ->relationship('brand', 'name')
+                ->searchable()
+                ->preload()
+                ->createOptionForm([
+                    Forms\Components\TextInput::make('name')
+                        ->required()->label('Nombre de la marca'),
+                ])->required(),
 
             Forms\Components\TextInput::make('descripcion')
                 ->label('Descripción')
@@ -125,13 +133,14 @@ class ArticleResource extends Resource
 
             Forms\Components\TextInput::make('codigo')
                 ->label('Código del producto')
+                ->placeholder('Se Genera Automaticamente')
                 ->readOnly(),
 
             // Campo para mostrar el código QR generado
-             Forms\Components\ViewField::make('codigo_qr')
-                 ->label('Código QR')
-                 ->view('filament.resources.article-resource.fields.qr-code')
-                 ->visibleOn('edit'), // Solo visible en la página de edición
+            Forms\Components\ViewField::make('codigo_qr')
+                ->label('Código QR')
+                ->view('filament.resources.article-resource.fields.qr-code')
+                ->visibleOn('edit'), // Solo visible en la página de edición
         ]);
     }
 
@@ -179,7 +188,9 @@ class ArticleResource extends Resource
                     ->searchable(),
 
             ])
-            ->filters([])
+            ->filters([
+                Tables\Filters\TrashedFilter::make(),
+            ])
             ->actions([
                 Tables\Actions\Action::make('detalles')
                     ->label('')
@@ -196,6 +207,8 @@ class ArticleResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\RestoreBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make(),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
@@ -206,11 +219,15 @@ class ArticleResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $user = auth()->user();
-        $query = parent::getEloquentQuery()->select('articles.*') // Aseguramos seleccionar todas las columnas de articles
-        ->selectSub(
-            'select sum(stock) from bodega_article where article_id = articles.id',
-            'bodegas_sum_stock'
-        );
+        $query = parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class, // 1. Le decimos a Filament que considere los artículos archivados
+            ])
+            ->select('articles.*') // 2. Nos aseguramos de seleccionar todas las columnas de articles
+            ->selectSub( // 3. Añadimos tu subconsulta para el stock total
+                'select sum(stock) from bodega_article where article_id = articles.id',
+                'bodegas_sum_stock'
+            );
 
         if (!$user || $user->hasRole('admin')) {
             return $query;
