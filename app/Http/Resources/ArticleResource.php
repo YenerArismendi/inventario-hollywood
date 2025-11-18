@@ -17,8 +17,8 @@ class ArticleResource extends JsonResource
         return [
             'id' => $this->id,
             'nombre' => $this->nombre,
-            'codigo' => $this->codigo,
-            'precio_venta' => $this->precio, // Puedes renombrar campos
+            'codigo_barras' => $this->codigo_barras,
+            'precio_venta' => $this->precio_venta,
             'unidad' => $this->unidad_medida,
             'imagen_url' => $this->imagen ? url('storage/' . $this->imagen) : null, // Generar URL completa
             // Cargar el stock solo si la relación está cargada

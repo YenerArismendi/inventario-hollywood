@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ArticleResource;
-use App\Models\Bodega;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ArticleController extends Controller
 {
@@ -14,14 +14,20 @@ class ArticleController extends Controller
      */
     public function index()
     {
-        // Asumimos que la bodega principal para ventas tiene ID 1
-        // Es mejor obtener esto de una configuración o de forma más dinámica
-        $bodegaPrincipalId = 1;
+        $user = Auth::user();
+        $sesionActiva = $user->sesionCajaActiva;
 
-        $bodega = Bodega::findOrFail($bodegaPrincipalId);
+        // Si no hay sesión de caja activa, no podemos saber de qué bodega mostrar artículos.
+        if (!$sesionActiva) {
+            // Devolvemos una colección vacía con un error o mensaje claro.
+            return ArticleResource::collection([]);
+        }
+
+        // Obtenemos la bodega desde la sesión de caja activa.
+        $bodega = $sesionActiva->caja->bodega;
 
         // Obtenemos los artículos de esa bodega con su stock (pivot)
-        $articles = $bodega->articles()->where('estado', '1')->get();
+        $articles = $bodega->articles()->where('estado', '1')->wherePivot('stock', '>', 0)->get();
 
         // Usamos el Resource Collection para transformar la lista de artículos
         return ArticleResource::collection($articles);
