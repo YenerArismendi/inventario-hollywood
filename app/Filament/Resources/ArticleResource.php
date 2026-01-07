@@ -184,8 +184,7 @@ class ArticleResource extends Resource
                 Tables\Columns\TextColumn::make('bodegas_sum_stock')
                     ->label('Stock Total')
                     ->numeric()
-                    ->sortable()
-                    ->searchable(),
+                    ->sortable(),
 
             ])
             ->filters([
@@ -195,7 +194,8 @@ class ArticleResource extends Resource
                 Tables\Actions\Action::make('detalles')
                     ->label('')
                     ->icon('heroicon-o-information-circle')
-                    ->modalContent(fn(Article $record): \Illuminate\Contracts\View\View => view('filament.resources.article-resource.modals.stock-details', ['record' => $record])
+                    ->modalContent(
+                        fn(Article $record): \Illuminate\Contracts\View\View => view('filament.resources.article-resource.modals.stock-details', ['record' => $record])
                     )
                     ->modalHeading(fn(Article $record) => 'Stock de ' . $record->nombre)
                     ->modalCancelActionLabel('Cerrar')
