@@ -7,6 +7,7 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ArticlesRelationManager extends RelationManager
 {
@@ -21,8 +22,10 @@ class ArticlesRelationManager extends RelationManager
             ->schema([
                 Forms\Components\TextInput::make('stock')
                     ->label('Cantidad en Stock')
-                    ->numeric() // Usamos numeric() para el campo de stock
-                    ->required(),
+                    ->numeric()
+                    ->required()
+                    ->readOnly() // Stock solo lectura
+                    ->helperText('El stock solo se puede modificar mediante transferencias o ajustes de inventario.'),
 
                 // Selector para la columna del estante
                 Forms\Components\Select::make('columna')
@@ -41,6 +44,9 @@ class ArticlesRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            /* ->modifyQueryUsing(function (Builder $query) {
+                return $query->where('bodega_article.stock', '>', 0);
+            }) */
             ->columns([
                 Tables\Columns\TextColumn::make('nombre'),
                 Tables\Columns\TextColumn::make('codigo')->label('Codigo'),
@@ -53,7 +59,9 @@ class ArticlesRelationManager extends RelationManager
                         $state < 10 => 'warning',
                         default => 'success',
                     })
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return $query->orderBy('bodega_article.stock', $direction);
+                    }),
                 Tables\Columns\TextColumn::make('pivot.columna')
                     ->label('Columna')
                     ->sortable(),
@@ -78,7 +86,8 @@ class ArticlesRelationManager extends RelationManager
                             ->placeholder('Seleccionar Articulo')
                             ->preload(50)
                             ->required(),
-                        Forms\Components\TextInput::make('stock')->numeric()->required()->default(1)->label('Cantidad Inicial'),
+                        Forms\Components\Hidden::make('stock')
+                            ->default(0), // Por defecto 0 al vincular
 
                         // Añadimos los campos de ubicación también aquí
                         Forms\Components\Select::make('columna')

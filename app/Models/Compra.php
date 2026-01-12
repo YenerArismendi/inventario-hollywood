@@ -11,9 +11,15 @@ class Compra extends Model
 
     protected $fillable = [
         'proveedor_id',
+        'bodega_id',
         'fecha',
         'total',
     ];
+
+    public function bodega()
+    {
+        return $this->belongsTo(Bodega::class);
+    }
 
     public function proveedor()
     {
@@ -22,7 +28,15 @@ class Compra extends Model
 
     public function detalles()
     {
-        return $this->hasMany(CompraDetalles::class);
+        return $this->hasMany(CompraDetalles::class, 'compra_id');
     }
 
+    protected static function booted()
+    {
+        static::deleting(function ($compra) {
+            $compra->detalles->each(function ($detalle) {
+                $detalle->delete();
+            });
+        });
+    }
 }

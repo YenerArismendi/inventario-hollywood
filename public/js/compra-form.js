@@ -55,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalInput = document.getElementById('total-input');
     const detallesJsonInput = document.getElementById('detalles-json');
     const proveedorSelect = document.getElementById('proveedor');
+    const bodegaSelect = document.getElementById('bodega');
     const fechaInput = document.getElementById('fecha');
 
     // === Datos iniciales ===
@@ -197,7 +198,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const proveedorId = proveedorSelect?.value;
+        const bodegaId = bodegaSelect?.value;
         const fecha = fechaInput?.value;
+
+        if (!bodegaId || bodegaId === '') {
+            showToast('⚠️ Selecciona una bodega de destino.', 'warning');
+            return;
+        }
 
         if (!proveedorId || proveedorId === '') {
             showToast('⚠️ Selecciona un proveedor válido.', 'warning');
@@ -206,6 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const data = {
             proveedor_id: proveedorId,
+            bodega_id: bodegaId,
             fecha: fecha,
             total: parseFloat(totalInput.value) || 0,
             detalles: insumosAgregados.map(i => ({

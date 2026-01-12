@@ -16,6 +16,7 @@ class CompraController extends Controller
     public function form($id = null)
     {
         $insumos = Insumo::select('id', 'nombre')->get();
+        $bodegas = \App\Models\Bodega::select('id', 'nombre')->get();
         $compra = null;
         $detalles = [];
 
@@ -39,7 +40,8 @@ class CompraController extends Controller
         return view('filament.compra.tabla-insumos', [
             'insumosJson' => $insumosJson,
             'compra' => $compra,
-            'detallesJson' => $detallesJson,    
+            'detallesJson' => $detallesJson,
+            'bodegas' => $bodegas,
         ]);
     }
 
@@ -50,6 +52,7 @@ class CompraController extends Controller
     {
         $request->validate([
             'fecha' => 'required|date',
+            'bodega_id' => 'required|exists:bodegas,id',
             'total' => 'required|numeric|min:0',
             'detalles' => 'required|array|min:1',
             'detalles.*.cantidad' => 'required|numeric|min:0.01',
@@ -59,6 +62,7 @@ class CompraController extends Controller
 
         $compra = Compra::create([
             'proveedor_id' => $request->proveedor_id,
+            'bodega_id' => $request->bodega_id,
             'fecha' => $request->fecha,
             'total' => $request->total,
         ]);
@@ -81,6 +85,7 @@ class CompraController extends Controller
     {
         $request->validate([
             'fecha' => 'required|date',
+            'bodega_id' => 'required|exists:bodegas,id',
             'detalles' => 'required|array|min:1',
             'detalles.*.cantidad' => 'required|numeric|min:0.01',
             'detalles.*.costo_unitario' => 'required|numeric|min:0',
@@ -94,6 +99,7 @@ class CompraController extends Controller
 
             $compra->update([
                 'fecha' => $request->fecha,
+                'bodega_id' => $request->bodega_id,
                 'total' => $total,
             ]);
 

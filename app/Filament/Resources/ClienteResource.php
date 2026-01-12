@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Support\ColombiaData;
 use App\Filament\Resources\ClienteResource\Pages;
+use App\Filament\Resources\ClienteResource\RelationManagers\VentasRelationManager;
 use App\Models\Cliente;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -90,9 +91,11 @@ class ClienteResource extends Resource
                     ->searchable(),
                 Tables\Columns\IconColumn::make('tiene_credito')
                     ->boolean(),
-                Tables\Columns\TextColumn::make('limite_credito')
+                Tables\Columns\TextColumn::make('deuda_actual')
+                    ->label('Deuda Actual')
                     ->money('cop')
-                    ->sortable(),
+                    ->sortable()
+                    ->color(fn($state) => $state > 0 ? 'danger' : 'success'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -118,7 +121,7 @@ class ClienteResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            VentasRelationManager::class,
         ];
     }
 

@@ -26,10 +26,30 @@ class VentaResource extends Resource
                 Tables\Columns\TextColumn::make('cliente.nombre')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('total')->money('cop')->sortable(),
                 Tables\Columns\TextColumn::make('metodo_pago')->badge(),
+                Tables\Columns\TextColumn::make('tipo_venta')
+                    ->label('Tipo de Venta')
+                    ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        'presencial' => 'success',
+                        'virtual' => 'info',
+                        default => 'gray',
+                    })
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('user.name')->label('Vendedor')->sortable(),
                 Tables\Columns\TextColumn::make('created_at')->label('Fecha')->dateTime()->sortable(),
             ])
-            ->defaultSort('created_at', 'desc');
+            ->defaultSort('created_at', 'desc')
+            ->actions([
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->modalHeading('Eliminar Venta')
+                    ->modalDescription('¿Estás seguro de que deseas eliminar esta venta? Esto afectará los reportes financieros y el historial de ventas.'),
+            ])
+            ->bulkActions([
+                Tables\Actions\DeleteBulkAction::make()
+                    ->modalHeading('Eliminar Ventas Seleccionadas')
+                    ->modalDescription('¿Estás seguro de que deseas eliminar las ventas seleccionadas? Esto afectará los reportes financieros y el historial de ventas.'),
+            ]);
     }
 
     public static function getPages(): array

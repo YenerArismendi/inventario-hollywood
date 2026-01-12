@@ -7,9 +7,20 @@ use Illuminate\Database\Eloquent\Model;
 class Recetas extends Model
 {
     protected $table = 'recetas';
-    protected $fillable = ['nombre', 'precio', 'tipo'];
+    protected $fillable = ['nombre', 'precio', 'tipo', 'article_id', 'bodega_id'];
+
+    public function article()
+    {
+        return $this->belongsTo(Article::class, 'article_id');
+    }
+
+    public function bodega()
+    {
+        return $this->belongsTo(Bodega::class, 'bodega_id');
+    }
 
     public function detalles()
+
     {
         return $this->hasMany(RecetaDetalles::class, 'receta_id');
     }
@@ -20,7 +31,7 @@ class Recetas extends Model
         if (!$this->relationLoaded('detalles')) {
             $this->load('detalles.insumo');
         }
-        
+
         // logger([
         //     'detalles' => $this->detalles,
         //     'insumos' => $this->detalles?->pluck('insumo'),

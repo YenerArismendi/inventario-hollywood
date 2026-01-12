@@ -29,12 +29,14 @@ class BodegaResource extends Resource
                     ->required()
                     ->label('Nombre de la Bodega'),
                 Forms\Components\TextInput::make('direccion')
+                    ->required()
                     ->label('Dirección'),
                 Select::make('tipo')
                     ->label('Tipo de Bodega')
                     ->options([
-                        'almacen' => 'Almacén General',
-                        'fabrica' => 'Fábrica de Perfumes',
+                        'preparacion' => 'Bodega de Preparación',
+                        'venta' => 'Bodega de Venta (POS)',
+                        'almacenamiento' => 'Bodega de Almacenamiento General',
                     ])
                     ->required()
                     ->native(false),
@@ -43,6 +45,7 @@ class BodegaResource extends Resource
                     ->relationship(name: 'encargado', titleAttribute: 'name')
                     ->getOptionLabelFromRecordUsing(fn(User $record) => "{$record->name} - ({$record->getRoleNames()->join(', ')})")
                     ->searchable()
+                    ->required()
                     ->preload(),
             ]);
     }
@@ -89,6 +92,7 @@ class BodegaResource extends Resource
     {
         return [
             ArticlesRelationManager::class,
+            RelationManagers\InsumosRelationManager::class,
         ];
     }
 

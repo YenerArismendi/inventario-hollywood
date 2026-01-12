@@ -13,9 +13,23 @@ class Article extends Model
     protected $table = 'articles';
     protected $primaryKey = 'id';
     protected $fillable = [
-        'nombre', 'presentation', 'codigo', 'codigo_barras', 'descripcion', 'costo', 'precio_venta',
-        'unidad_medida', 'imagen', 'codigo_qr', 'estado', 'temporada',
-        'category_id', 'brand_id', 'proveedor_id'
+        'nombre',
+        'presentation',
+        'codigo',
+        'codigo_barras',
+        'descripcion',
+        'costo',
+        'precio_venta',
+        'unidad_medida',
+        'imagen',
+        'codigo_qr',
+        'estado',
+        'temporada',
+        'category_id',
+        'brand_id',
+        'proveedor_id',
+        'responsable',
+        'is_preparacion'
     ];
 
     // Relación con proveedor

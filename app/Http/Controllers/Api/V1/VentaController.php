@@ -11,19 +11,23 @@ use Illuminate\Support\Facades\Auth;
 
 class VentaController extends Controller
 {
-    public function __construct(protected VentaService $ventaService)
-    {
-    }
+    public function __construct(protected VentaService $ventaService) {}
 
     /**
      * Muestra el historial paginado de ventas del usuario autenticado.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
 
         $ventas = Venta::where('user_id', $user->id)
             ->with(['detalles.article', 'bodega']) // Precargamos relaciones para optimizar
+            ->when($request->filled('fecha'), function ($query) use ($request) {
+                return $query->whereDate('created_at', $request->fecha);
+            })
+            ->when($request->filled('metodo_pago'), function ($query) use ($request) {
+                return $query->where('metodo_pago', $request->metodo_pago);
+            })
             ->latest() // Ordenamos por fecha, de la más reciente a la más antigua
             ->paginate(20); // Paginamos los resultados
 
@@ -59,6 +63,7 @@ class VentaController extends Controller
         $validated = $request->validate([
             'cliente_id' => 'nullable|integer|exists:clientes,id',
             'metodo_pago' => 'required|string|in:efectivo,tarjeta,transferencia,credito',
+            'tipo_venta' => 'nullable|string|in:presencial,virtual',
             'subtotal' => 'required|numeric',
             'total' => 'required|numeric',
             'descuento' => 'nullable|numeric',

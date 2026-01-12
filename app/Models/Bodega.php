@@ -25,10 +25,10 @@ class Bodega extends Model
     /**
      * Una Bodega puede tener muchos Usuarios (supervisores, empleados).
      */
-//    public function users(): HasMany
-//    {
-//        return $this->hasMany(User::class);
-//    }
+    //    public function users(): HasMany
+    //    {
+    //        return $this->hasMany(User::class);
+    //    }
 
     public function users()
     {
@@ -44,6 +44,16 @@ class Bodega extends Model
             ->using(BodegaArticle::class)
             ->as('pivot')
             ->withPivot('stock', 'columna', 'fila')
+            ->withTimestamps();
+    }
+
+    /**
+     * Una Bodega tiene un inventario de muchos Insumos a través de una tabla pivote.
+     */
+    public function insumos(): BelongsToMany
+    {
+        return $this->belongsToMany(Insumo::class, 'bodega_insumo')
+            ->withPivot('stock', 'costo_unitario_promedio')
             ->withTimestamps();
     }
 

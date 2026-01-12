@@ -32,10 +32,16 @@ class ArticleResource extends Resource
         return $form->schema([
             Forms\Components\TextInput::make('nombre')
                 ->label('Nombre del producto')
+                ->required()
                 ->reactive()
                 ->live(onBlur: true),
+            Forms\Components\TextInput::make('responsable')
+                ->label('Responsable/Dueño')
+                ->required()
+                ->placeholder('Nombre del responsable del producto'),
             Forms\Components\TextInput::make('presentation')
                 ->label('Presentación (Ej: 120ml, 200g, Cartera Mediana)')
+                ->required()
                 ->reactive()
                 ->live(onBlur: true),
             Forms\Components\TextInput::make('codigo_barras')
@@ -75,6 +81,7 @@ class ArticleResource extends Resource
 
             Forms\Components\TextInput::make('precio_venta')
                 ->label('Precio de Venta')
+                ->required()
                 ->numeric()
                 ->suffix('COP'),
 
@@ -136,6 +143,11 @@ class ArticleResource extends Resource
                 ->placeholder('Se Genera Automaticamente')
                 ->readOnly(),
 
+            // Campo para mostrar si es de preparación
+            Forms\Components\Toggle::make('is_preparacion')
+                ->label('Es de Preparación')
+                ->helperText('Si se marca, el stock no se podrá modificar manualmente en bodegas, solo a través de preparaciones.'),
+
             // Campo para mostrar el código QR generado
             Forms\Components\ViewField::make('codigo_qr')
                 ->label('Código QR')
@@ -153,6 +165,14 @@ class ArticleResource extends Resource
                     ->limit(20)
                     ->tooltip(fn($record) => $record->nombre)
                     ->searchable(), // 👈 habilita búsqueda en esta columna
+                Tables\Columns\TextColumn::make('responsable')
+                    ->label('Responsable')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\IconColumn::make('is_preparacion')
+                    ->label('Prep.')
+                    ->boolean()
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('category.name')
                     ->label('Categoría')
@@ -200,16 +220,26 @@ class ArticleResource extends Resource
                     ->modalHeading(fn(Article $record) => 'Stock de ' . $record->nombre)
                     ->modalCancelActionLabel('Cerrar')
                     ->modalSubmitAction(false)
+                    ->visible(fn() => !auth()->user()->active_bodega_id || auth()->user()->active_bodega_id == 1)
                     ->action(null),
 
                 Tables\Actions\EditAction::make()
                     ->label(''),
+
+                Tables\Actions\DeleteAction::make()
+                    ->label('')
+                    ->modalHeading('Eliminar Artículo')
+                    ->modalDescription('¿Estás seguro de que deseas eliminar este artículo? Esto afectará las recetas donde es el producto terminado y se perderá su registro de stock en las bodegas.'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\RestoreBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make()
+                        ->modalHeading('Eliminar Permanentemente Artículos Seleccionados')
+                        ->modalDescription('¿Estás seguro de que deseas eliminar PERMANENTEMENTE estos artículos? Esta acción no se puede deshacer y afectará recetas y stock.'),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->modalHeading('Eliminar Artículos Seleccionados')
+                        ->modalDescription('¿Estás seguro de que deseas eliminar estos artículos? Esto afectará las recetas donde son productos terminados y su stock en bodegas.'),
                 ]),
             ])
             ->searchPlaceholder('Buscar artículo...'); // texto del buscador
@@ -219,13 +249,21 @@ class ArticleResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $user = auth()->user();
+        // Lógica de Stock Contextual
+        // Si es Bodega Principal (ID 1) o Admin Global: Stock Global.
+        // Si es Otra Bodega: Stock Local.
+        $stockSubquery = 'select sum(stock) from bodega_article where article_id = articles.id';
+        if ($user && $user->active_bodega_id && $user->active_bodega_id != 1) {
+            $stockSubquery .= " and bodega_id = {$user->active_bodega_id}";
+        }
+
         $query = parent::getEloquentQuery()
             ->withoutGlobalScopes([
                 SoftDeletingScope::class, // 1. Le decimos a Filament que considere los artículos archivados
             ])
             ->select('articles.*') // 2. Nos aseguramos de seleccionar todas las columnas de articles
             ->selectSub( // 3. Añadimos tu subconsulta para el stock total
-                'select sum(stock) from bodega_article where article_id = articles.id',
+                $stockSubquery,
                 'bodegas_sum_stock'
             );
 

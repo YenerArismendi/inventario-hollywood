@@ -17,7 +17,7 @@ class BodegaSelector extends Component
 
         $this->bodegas = $user->bodegas()
             ->select('bodegas.id', 'bodegas.nombre')
-            ->pluck('nombre','id')
+            ->pluck('nombre', 'id')
             ->toArray();
 
         $this->bodega_id = $user->active_bodega_id ?? array_key_first($this->bodegas);
@@ -36,6 +36,9 @@ class BodegaSelector extends Component
 
             // Emitir evento para widgets
             $this->dispatch('bodegaChanged', $value);
+
+            // Recargar la página para que los recursos se actualicen con la nueva bodega
+            return redirect(request()->header('Referer'));
         }
     }
 

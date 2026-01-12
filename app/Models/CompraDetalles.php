@@ -25,30 +25,121 @@ class CompraDetalles extends Model
     {
         static::created(function ($detalle) {
             $insumo = $detalle->insumo;
+            $compra = $detalle->compra;
+            $bodegaId = $compra->bodega_id;
 
-            // 🔹 Conversión: cuántas unidades de consumo hay por unidad de compra
+            if (!$bodegaId) {
+                return;
+            }
+
             $conversion = max((float)$insumo->conversion, 1);
-
-            // 🔹 Calcular cantidad real en unidad de consumo
             $cantidadReal = $detalle->cantidad * $conversion;
-
-            // 🔹 Calcular costo por unidad de consumo (lo que vale 1 unidad de consumo)
             $costoUnitarioReal = $detalle->costo_unitario / $conversion;
 
-            // 🔹 Actualizar stock total (en unidad de consumo)
-            $nuevoStock = $insumo->stock + $cantidadReal;
+            $pivot = \Illuminate\Support\Facades\DB::table('bodega_insumo')
+                ->where('bodega_id', $bodegaId)
+                ->where('insumo_id', $insumo->id)
+                ->first();
 
-            // 🔹 Recalcular el costo promedio por unidad de consumo
-            // Si ya hay stock anterior, pondera el nuevo costo
-            $nuevoCostoPromedio = $insumo->stock > 0
-                ? (($insumo->stock * $insumo->costo_unitario_promedio) + ($cantidadReal * $costoUnitarioReal)) / $nuevoStock
+            $stockActual = $pivot ? (float)$pivot->stock : 0;
+            $costoPromedioActual = $pivot ? (float)$pivot->costo_unitario_promedio : 0;
+
+            $nuevoStock = $stockActual + $cantidadReal;
+
+            $nuevoCostoPromedio = $stockActual > 0
+                ? (($stockActual * $costoPromedioActual) + ($cantidadReal * $costoUnitarioReal)) / $nuevoStock
                 : $costoUnitarioReal;
 
-            // 🔹 Actualizar el insumo
+            if ($pivot) {
+                \Illuminate\Support\Facades\DB::table('bodega_insumo')
+                    ->where('id', $pivot->id)
+                    ->update([
+                        'stock' => $nuevoStock,
+                        'costo_unitario_promedio' => $nuevoCostoPromedio,
+                        'updated_at' => now(),
+                    ]);
+            } else {
+                \Illuminate\Support\Facades\DB::table('bodega_insumo')->insert([
+                    'bodega_id' => $bodegaId,
+                    'insumo_id' => $insumo->id,
+                    'stock' => $nuevoStock,
+                    'costo_unitario_promedio' => $nuevoCostoPromedio,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            $totalStock = \Illuminate\Support\Facades\DB::table('bodega_insumo')
+                ->where('insumo_id', $insumo->id)
+                ->sum('stock');
+
+            // Calcular costo global ponderado
+            $valorTotalGlobal = \Illuminate\Support\Facades\DB::table('bodega_insumo')
+                ->where('insumo_id', $insumo->id)
+                ->sum(\Illuminate\Support\Facades\DB::raw('stock * costo_unitario_promedio'));
+
+            $costoPromedioGlobal = $totalStock > 0 ? $valorTotalGlobal / $totalStock : 0;
+
             $insumo->update([
-                'stock' => $nuevoStock,
-                'costo_unitario_promedio' => $nuevoCostoPromedio,
+                'stock' => $totalStock,
+                'costo_unitario_promedio' => $costoPromedioGlobal
             ]);
+        });
+
+        static::deleting(function ($detalle) {
+            $insumo = $detalle->insumo;
+            $compra = $detalle->compra;
+            $bodegaId = $compra->bodega_id;
+
+            if (!$bodegaId) return;
+
+            $conversion = max((float)$insumo->conversion, 1);
+            $cantidadReal = $detalle->cantidad * $conversion;
+            $costoUnitarioReal = $detalle->costo_unitario / $conversion;
+
+            $pivot = \Illuminate\Support\Facades\DB::table('bodega_insumo')
+                ->where('bodega_id', $bodegaId)
+                ->where('insumo_id', $insumo->id)
+                ->first();
+
+            if ($pivot) {
+                $stockActual = (float)$pivot->stock;
+                $costoPromedioActual = (float)$pivot->costo_unitario_promedio;
+
+                $nuevoStock = max(0, $stockActual - $cantidadReal);
+
+                if ($nuevoStock > 0) {
+                    $costoTotalActual = $stockActual * $costoPromedioActual;
+                    $costoCompraActual = $cantidadReal * $costoUnitarioReal;
+                    $nuevoCostoPromedio = ($costoTotalActual - $costoCompraActual) / $nuevoStock;
+                } else {
+                    $nuevoCostoPromedio = 0;
+                }
+
+                \Illuminate\Support\Facades\DB::table('bodega_insumo')
+                    ->where('id', $pivot->id)
+                    ->update([
+                        'stock' => $nuevoStock,
+                        'costo_unitario_promedio' => max(0, $nuevoCostoPromedio),
+                        'updated_at' => now(),
+                    ]);
+
+                // Actualizar stock global y costo promedio global
+                $totalStock = \Illuminate\Support\Facades\DB::table('bodega_insumo')
+                    ->where('insumo_id', $insumo->id)
+                    ->sum('stock');
+
+                $valorTotalGlobal = \Illuminate\Support\Facades\DB::table('bodega_insumo')
+                    ->where('insumo_id', $insumo->id)
+                    ->sum(\Illuminate\Support\Facades\DB::raw('stock * costo_unitario_promedio'));
+
+                $costoPromedioGlobal = $totalStock > 0 ? $valorTotalGlobal / $totalStock : 0;
+
+                $insumo->update([
+                    'stock' => $totalStock,
+                    'costo_unitario_promedio' => $costoPromedioGlobal
+                ]);
+            }
         });
     }
 

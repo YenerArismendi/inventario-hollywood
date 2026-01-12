@@ -42,6 +42,61 @@ class RecetasResource extends Resource
                                 ->prefixIcon('heroicon-o-book-open')
                                 ->required(),
 
+                            Select::make('article_id')
+                                ->label('Producto terminado')
+                                ->relationship('article', 'nombre')
+                                ->searchable()
+                                ->preload()
+                                ->prefixIcon('heroicon-o-cube')
+                                ->required()
+                                ->createOptionForm([
+                                    Forms\Components\TextInput::make('nombre')
+                                        ->label('Nombre del producto')
+                                        ->required(),
+                                    Forms\Components\TextInput::make('precio_venta')
+                                        ->label('Precio de Venta Sugerido')
+                                        ->numeric()
+                                        ->suffix('COP'),
+                                    Forms\Components\Select::make('category_id')
+                                        ->label('Categoría')
+                                        ->relationship('category', 'name')
+                                        ->required(),
+                                    Forms\Components\Select::make('unidad_medida')
+                                        ->options([
+                                            'unidad' => 'Unidad',
+                                            'mililitro' => 'Mililitro',
+                                        ])
+                                        ->label('Unidad')
+                                        ->required(),
+                                    Forms\Components\Hidden::make('is_preparacion')
+                                        ->default(true),
+                                ])
+                                ->columnSpanFull(),
+
+                            Select::make('bodega_id')
+                                ->label('Bodega de Destino (Producción)')
+                                ->relationship('bodega', 'nombre', fn($query) => $query->where('tipo', 'preparacion'))
+                                ->placeholder('Selecciona la bodega donde caerá el producto')
+                                ->searchable()
+                                ->preload()
+                                ->prefixIcon('heroicon-o-building-storefront')
+                                ->required()
+                                ->default(function () {
+                                    $user = \Illuminate\Support\Facades\Auth::user();
+                                    /** @var \App\Models\User $user */
+                                    if ($user && !$user->hasRole('admin') && !$user->can('change_bodega')) {
+                                        return $user->bodegas()->where('tipo', 'preparacion')->first()?->id;
+                                    }
+                                    return null;
+                                })
+                                ->disabled(function () {
+                                    /** @var \App\Models\User|null $user */
+                                    $user = \Illuminate\Support\Facades\Auth::user();
+                                    return !$user || (!$user->hasRole('admin') && !$user->can('change_bodega'));
+                                })
+                                ->dehydrated()
+                                ->helperText('Indica la bodega física donde se depositará el stock fabricado.'),
+
                             Select::make('tipo')
                                 ->label('Tipo de Receta')
                                 ->prefixIcon('heroicon-o-beaker')
@@ -233,6 +288,40 @@ class RecetasResource extends Resource
 
             ])
             ->actions([
+                Tables\Actions\Action::make('preparar')
+                    ->label('Preparar')
+                    ->icon('heroicon-o-fire')
+                    ->color('success')
+                    ->form([
+                        Forms\Components\TextInput::make('cantidad')
+                            ->label('Cantidad a Producir')
+                            ->numeric()
+                            ->required()
+                            ->minValue(1)
+                            ->default(1),
+                    ])
+                    ->requiresConfirmation()
+                    ->modalHeading('Iniciar Preparación')
+                    ->modalDescription('Esta acción descontará los insumos del inventario y aumentará el stock del producto terminado.')
+                    ->modalSubmitActionLabel('Confirmar Producción')
+                    ->action(function (Recetas $record, array $data) {
+                        try {
+                            app(\App\Services\ProduccionService::class)->producir($record, $data['cantidad']);
+
+                            \Filament\Notifications\Notification::make()
+                                ->title('Producción completada')
+                                ->body("Se han producido {$data['cantidad']} unidades de {$record->nombre}.")
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Error en la producción')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+
                 Tables\Actions\ViewAction::make()
                     ->label('Ver')
                     ->icon('heroicon-o-eye')
@@ -246,12 +335,16 @@ class RecetasResource extends Resource
                 Tables\Actions\DeleteAction::make()
                     ->label('Eliminar')
                     ->icon('heroicon-o-trash')
-                    ->color('danger'),
+                    ->color('danger')
+                    ->modalHeading('Eliminar Receta')
+                    ->modalDescription('¿Estás seguro de que deseas eliminar esta receta? Esto evitará futuras producciones del artículo asociado utilizando esta fórmula.'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()
-                        ->label('Eliminar seleccionados'),
+                        ->label('Eliminar seleccionados')
+                        ->modalHeading('Eliminar Recetas Seleccionadas')
+                        ->modalDescription('¿Estás seguro de que deseas eliminar las recetas seleccionadas? Esto evitará futuras producciones de los artículos asociados utilizando estas fórmulas.'),
                 ]),
             ]);
     }

@@ -44,6 +44,7 @@ class CompraResource extends Resource
                             ->view('filament.compra.tabla-insumos')
                             ->viewData(function ($record) {
                                 $insumos = Insumo::select('id', 'nombre')->get();
+                                $bodegas = \App\Models\Bodega::select('id', 'nombre')->get();
 
                                 $detalles = $record
                                     ? $record->detalles()->with('insumo')->get()->map(function ($d) {
@@ -62,6 +63,7 @@ class CompraResource extends Resource
                                     'detallesJson' => json_encode($detalles, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP),
                                     'compra' => $record,
                                     'compraId' => $record?->id,
+                                    'bodegas' => $bodegas,
                                 ];
                             }),
                     ]),
@@ -82,10 +84,14 @@ class CompraResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->modalHeading('Eliminar Compra')
+                    ->modalDescription('¿Estás seguro de que deseas eliminar esta compra? Esta acción disminuirá el stock de los insumos asociados automáticamente.'),
             ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\DeleteBulkAction::make()
+                    ->modalHeading('Eliminar Compras seleccionadas')
+                    ->modalDescription('¿Estás seguro de que deseas eliminar las compras seleccionadas? El stock de los insumos asociados disminuirá automáticamente.'),
             ]);
     }
 

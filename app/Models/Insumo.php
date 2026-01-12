@@ -6,7 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Insumo extends Model
 {
-    Protected $table = 'insumos';
-    Protected $primaryKey = 'id';
-    Protected $fillable = ['nombre', 'unidad_compra', 'unidad_consumo', 'conversion', 'stock', 'costo_unitario_promedio'];
+    protected $table = 'insumos';
+    protected $primaryKey = 'id';
+    protected $fillable = ['nombre', 'unidad_compra', 'unidad_consumo', 'conversion', 'stock', 'costo_unitario_promedio'];
+
+    public function bodegas()
+    {
+        return $this->belongsToMany(Bodega::class, 'bodega_insumo')
+            ->withPivot('stock', 'costo_unitario_promedio')
+            ->withTimestamps();
+    }
 }

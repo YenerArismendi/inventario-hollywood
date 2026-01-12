@@ -76,6 +76,7 @@ class VentaService
                 'descuento' => $datosVenta['descuento'] ?? 0,
                 'total' => $datosVenta['total'],
                 'metodo_pago' => $datosVenta['metodo_pago'],
+                'tipo_venta' => $datosVenta['tipo_venta'] ?? $user->tipo_venta ?? 'presencial',
                 'estado' => 'completada',
             ]);
 

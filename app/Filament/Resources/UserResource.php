@@ -92,7 +92,16 @@ class UserResource extends Resource
                         'transportista' => 'Transportista',
                     ])
                     ->required()
-                    ->native(false),
+                    ->native(false)
+                    ->live(),
+                Select::make('tipo_venta')
+                    ->label('Tipo de venta por defecto')
+                    ->options([
+                        'presencial' => 'Presencial',
+                        'virtual' => 'Virtual',
+                    ])
+                    ->visible(fn(Forms\Get $get) => $get('cargo') === 'vendedor')
+                    ->required(fn(Forms\Get $get) => $get('cargo') === 'vendedor'),
                 Forms\Components\TextInput::make('password')
                     ->label('Contraseña')
                     ->password()
