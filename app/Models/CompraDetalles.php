@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class CompraDetalles extends Model
 {
@@ -10,9 +11,10 @@ class CompraDetalles extends Model
 
     protected $fillable = [
         'compra_id',
-        'insumo_id',
-        'cantidad',          // Cantidad en unidad de compra
-        'costo_unitario',    // Costo por unidad de compra
+        'insumo_id', // Si es un material para hacer un producto
+        'article_id', // Si es producto hecho
+        'cantidad',
+        'costo_unitario',
         'costo_total',
     ];
 
@@ -24,7 +26,14 @@ class CompraDetalles extends Model
     protected static function booted()
     {
         static::created(function ($detalle) {
+            if (!$detalle->insumo_id) {
+                // Si no es un insumo, no hacer nada
+                return;
+            }
             $insumo = $detalle->insumo;
+            if (!$insumo) {
+                return;
+            }
             $compra = $detalle->compra;
             $bodegaId = $compra->bodega_id;
 
@@ -36,7 +45,7 @@ class CompraDetalles extends Model
             $cantidadReal = $detalle->cantidad * $conversion;
             $costoUnitarioReal = $detalle->costo_unitario / $conversion;
 
-            $pivot = \Illuminate\Support\Facades\DB::table('bodega_insumo')
+            $pivot = DB::table('bodega_insumo')
                 ->where('bodega_id', $bodegaId)
                 ->where('insumo_id', $insumo->id)
                 ->first();
@@ -51,7 +60,7 @@ class CompraDetalles extends Model
                 : $costoUnitarioReal;
 
             if ($pivot) {
-                \Illuminate\Support\Facades\DB::table('bodega_insumo')
+                DB::table('bodega_insumo')
                     ->where('id', $pivot->id)
                     ->update([
                         'stock' => $nuevoStock,
@@ -59,7 +68,7 @@ class CompraDetalles extends Model
                         'updated_at' => now(),
                     ]);
             } else {
-                \Illuminate\Support\Facades\DB::table('bodega_insumo')->insert([
+                DB::table('bodega_insumo')->insert([
                     'bodega_id' => $bodegaId,
                     'insumo_id' => $insumo->id,
                     'stock' => $nuevoStock,
@@ -69,14 +78,14 @@ class CompraDetalles extends Model
                 ]);
             }
 
-            $totalStock = \Illuminate\Support\Facades\DB::table('bodega_insumo')
+            $totalStock = DB::table('bodega_insumo')
                 ->where('insumo_id', $insumo->id)
                 ->sum('stock');
 
             // Calcular costo global ponderado
-            $valorTotalGlobal = \Illuminate\Support\Facades\DB::table('bodega_insumo')
+            $valorTotalGlobal = DB::table('bodega_insumo')
                 ->where('insumo_id', $insumo->id)
-                ->sum(\Illuminate\Support\Facades\DB::raw('stock * costo_unitario_promedio'));
+                ->sum(DB::raw('stock * costo_unitario_promedio'));
 
             $costoPromedioGlobal = $totalStock > 0 ? $valorTotalGlobal / $totalStock : 0;
 
@@ -87,7 +96,12 @@ class CompraDetalles extends Model
         });
 
         static::deleting(function ($detalle) {
+            if (!$detalle->insumo_id) {
+                // Si no es un insumo, no hacer nada
+                return;
+            }
             $insumo = $detalle->insumo;
+            if (!$insumo) return;
             $compra = $detalle->compra;
             $bodegaId = $compra->bodega_id;
 
@@ -97,7 +111,7 @@ class CompraDetalles extends Model
             $cantidadReal = $detalle->cantidad * $conversion;
             $costoUnitarioReal = $detalle->costo_unitario / $conversion;
 
-            $pivot = \Illuminate\Support\Facades\DB::table('bodega_insumo')
+            $pivot = DB::table('bodega_insumo')
                 ->where('bodega_id', $bodegaId)
                 ->where('insumo_id', $insumo->id)
                 ->first();
@@ -116,7 +130,7 @@ class CompraDetalles extends Model
                     $nuevoCostoPromedio = 0;
                 }
 
-                \Illuminate\Support\Facades\DB::table('bodega_insumo')
+                DB::table('bodega_insumo')
                     ->where('id', $pivot->id)
                     ->update([
                         'stock' => $nuevoStock,
@@ -125,13 +139,13 @@ class CompraDetalles extends Model
                     ]);
 
                 // Actualizar stock global y costo promedio global
-                $totalStock = \Illuminate\Support\Facades\DB::table('bodega_insumo')
+                $totalStock = DB::table('bodega_insumo')
                     ->where('insumo_id', $insumo->id)
                     ->sum('stock');
 
-                $valorTotalGlobal = \Illuminate\Support\Facades\DB::table('bodega_insumo')
+                $valorTotalGlobal = DB::table('bodega_insumo')
                     ->where('insumo_id', $insumo->id)
-                    ->sum(\Illuminate\Support\Facades\DB::raw('stock * costo_unitario_promedio'));
+                    ->sum(DB::raw('stock * costo_unitario_promedio'));
 
                 $costoPromedioGlobal = $totalStock > 0 ? $valorTotalGlobal / $totalStock : 0;
 

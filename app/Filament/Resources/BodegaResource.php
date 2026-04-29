@@ -13,7 +13,6 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use App\Filament\Resources\BodegaResource\RelationManagers\ArticlesRelationManager;
-use Illuminate\Database\Eloquent\Builder;
 
 class BodegaResource extends Resource
 {

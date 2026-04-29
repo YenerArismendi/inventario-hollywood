@@ -4,14 +4,12 @@ namespace App\Filament\Resources;
 
 use App\Services\SesionCajaService;
 use App\Filament\Resources\SesionCajaResource\Pages;
-use App\Models\Caja;
 use App\Models\SesionCaja;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Model;
 
 class SesionCajaResource extends Resource
 {
@@ -64,6 +62,15 @@ class SesionCajaResource extends Resource
                 //
             ])
             ->actions([
+                Tables\Actions\Action::make('ver_resumen')
+                    ->label('Ver Resumen')
+                    ->icon('heroicon-o-eye')
+                    ->color('info')
+                    ->modalHeading('Resumen de la Sesión de Caja')
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Cerrar')
+                    ->modalContent(fn(SesionCaja $record) => view('filament.sesion-caja-resumen', ['sesion' => $record]))
+                    ->visible(fn(SesionCaja $record) => true),
                 Tables\Actions\Action::make('aprobar_cierre')
                     ->label('Aprobar Cierre')
                     ->icon('heroicon-o-check-circle')

@@ -3,8 +3,9 @@
 namespace App\Services;
 
 use App\Models\Transferencia;
-use App\Models\BodegaArticle;
+use App\Models\Insumo;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Exception;
 
 class TransferenciaService
@@ -46,7 +47,7 @@ class TransferenciaService
                     $nuevoStockGlobal = DB::table('bodega_insumo')
                         ->where('insumo_id', $detalle->insumo_id)
                         ->sum('stock');
-                    \App\Models\Insumo::where('id', $detalle->insumo_id)->update(['stock' => $nuevoStockGlobal]);
+                    Insumo::where('id', $detalle->insumo_id)->update(['stock' => $nuevoStockGlobal]);
                 }
             }
 
@@ -77,7 +78,7 @@ class TransferenciaService
             }
 
             $transferencia->update([
-                'user_recepcion_id' => \Illuminate\Support\Facades\Auth::id(),
+                'user_recepcion_id' => Auth::id(),
                 'evidencia_recepcion' => $datosRecepcion['evidencia'] ?? null,
                 'observaciones_recepcion' => $datosRecepcion['observaciones'] ?? null,
                 'fecha_recepcion' => now(),
@@ -149,7 +150,7 @@ class TransferenciaService
                 $nuevoStockGlobal = DB::table('bodega_insumo')
                     ->where('insumo_id', $detalle->insumo_id)
                     ->sum('stock');
-                \App\Models\Insumo::where('id', $detalle->insumo_id)->update(['stock' => $nuevoStockGlobal]);
+                Insumo::where('id', $detalle->insumo_id)->update(['stock' => $nuevoStockGlobal]);
             }
         }
     }

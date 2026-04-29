@@ -31,6 +31,17 @@ class Compra extends Model
         return $this->hasMany(CompraDetalles::class, 'compra_id');
     }
 
+    public function compraDetalles()
+    {
+        return $this->hasMany(CompraDetalles::class, 'compra_id');
+    }
+
+    // Relación con el usuario que creó la compra
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     protected static function booted()
     {
         static::deleting(function ($compra) {
