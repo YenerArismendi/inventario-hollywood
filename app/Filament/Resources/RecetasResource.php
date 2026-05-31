@@ -44,7 +44,7 @@ class RecetasResource extends Resource
 
                             Select::make('article_id')
                                 ->label('Producto terminado')
-                                ->relationship('article', 'nombre')
+                                ->relationship('article', 'nombre', fn ($query) => $query->where('is_preparacion', true))
                                 ->searchable()
                                 ->preload()
                                 ->prefixIcon('heroicon-o-cube')
