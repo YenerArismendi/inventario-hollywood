@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Actions\ImportInsumoAction;
 use App\Filament\Resources\InsumoResource\Pages;
 use App\Models\Insumo;
 use Filament\Forms;
@@ -68,58 +69,23 @@ class InsumoResource extends Resource
                         // Ejemplo: 1 paquete = 500 unidades
                         return "1 {$record->unidad_compra} = {$state} {$record->unidad_consumo}";
                     }),
-                Tables\Columns\TextColumn::make('stock')
-                    ->label('Stock Actual')
+                Tables\Columns\TextColumn::make('bodegas_sum_stock')
+                    ->label('Stock Total')
+                    ->numeric()
                     ->sortable()
                     ->formatStateUsing(function ($state, Insumo $record) {
-                        $user = auth()->user();
-                        $bodegaActivaId = $user->active_bodega_id;
-
-                        // Si hay bodega activa seleccionada, mostrar stock de esa bodega ESPECÍFICA
-                        if ($bodegaActivaId) {
-                            $stockEnBodega = $record->bodegas()
-                                ->where('bodegas.id', $bodegaActivaId)
-                                ->value('bodega_insumo.stock') ?? 0;
-
-                            return '<div class="font-bold">' . number_format($stockEnBodega, 0, ',', '.') . ' ' . $record->unidad_consumo . '</div>';
-                        }
-
-                        // Lógica para Super Admin Global (Sin bodega seleccionada): Mostrar detalle completo
-                        if ($user->hasRole('super_admin')) {
-                            $html = '<div class="space-y-1">';
-                            // Mostrar Total Global explícitamente
-                            $html .= '<div class="font-bold text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-1 mb-1">Glob: ' . number_format($record->stock, 0, ',', '.') . ' ' . $record->unidad_consumo . '</div>';
-
-                            if ($record->bodegas->isNotEmpty()) {
-                                $html .= '<div class="text-xs text-gray-500 dark:text-gray-400 pl-1 space-y-0.5">';
-                                foreach ($record->bodegas as $bodega) {
-                                    if ($bodega->pivot->stock > 0) {
-                                        $html .= '<div class="flex justify-between items-center"><span class="font-medium mr-2">' . $bodega->nombre . ':</span> <span>' . number_format($bodega->pivot->stock, 0, ',', '.') . '</span></div>';
-                                    }
-                                }
-                                $html .= '</div>';
-                            } else {
-                                $html .= '<div class="text-xs italic text-gray-400">Sin ubicación asignada</div>';
-                            }
-                            $html .= '</div>';
-                            return $html;
-                        }
-
-                        // Lógica fallback para Trabajadores sin bodega activa (muestra suma de sus asignadas)
-                        $stockAsignado = $record->bodegas()
-                            ->whereIn('bodegas.id', $user->bodegas->pluck('id'))
-                            ->sum('bodega_insumo.stock');
-
-                        return '<div class="font-bold">' . number_format($stockAsignado, 0, ',', '.') . ' ' . $record->unidad_consumo . '</div>';
+                        return number_format($state ?? 0, 0, ',', '.') . ' ' . $record->unidad_consumo;
                     })
-                    ->html()
-                    ->color(fn(Insumo $record) => $record->stock < 10 ? 'danger' : 'success'),
+                    ->color(fn(Insumo $record) => $record->bodegas_sum_stock < 10 ? 'danger' : 'success'),
                 Tables\Columns\TextColumn::make('costo_unitario_promedio')
                     ->label('Costo Promedio')
                     ->formatStateUsing(fn($state) => '$' . number_format($state, 2, ',', '.'))
                     ->color('warning'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Creado'),
+            ])
+            ->headerActions([
+                ImportInsumoAction::make(),
             ])
             ->filters([
                 //
@@ -152,27 +118,29 @@ class InsumoResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $user = auth()->user();
-        $query = parent::getEloquentQuery();
+        
+        $stockSubquery = 'select sum(stock) from bodega_insumo where insumo_id = insumos.id';
+        if ($user && $user->active_bodega_id && $user->active_bodega_id != 1) {
+            $stockSubquery .= " and bodega_id = {$user->active_bodega_id}";
+        }
 
-        // Si el usuario tiene una bodega activa, filtramos los insumos que están en esa bodega (opcional)
-        // O simplemente nos aseguramos de que el cálculo de stock se base en esa bodega.
-        // El requerimiento dice "actualicen con los datos referentes a cada bodega".
-        // Si filtramos por la bodega, solo veremos los insumos QUe TIENEN relación con esa bodega.
+        $query = parent::getEloquentQuery()
+            ->select('insumos.*')
+            ->selectSub(
+                $stockSubquery,
+                'bodegas_sum_stock'
+            );
 
-        if ($user && $user->active_bodega_id) {
-            // Opcional: Mostrar solo insumos que tienen stock o registro en esa bodega
-            // $query->whereHas('bodegas', function ($q) use ($user) {
-            //    $q->where('bodega_insumo.bodega_id', $user->active_bodega_id);
-            // });
+        if (!$user || $user->hasRole('admin') || $user->hasRole('super_admin')) {
+            return $query;
+        }
 
-            // Por ahora, para ser consistentes con ArticleResource, haremos el filtro:
+        if ($user->active_bodega_id) {
             $query->whereHas('bodegas', function (Builder $q) use ($user) {
                 $q->where('bodega_insumo.bodega_id', $user->active_bodega_id);
             });
-        } elseif ($user && !$user->hasRole('super_admin')) {
-            // Fallback para trabajadores sin bodega activa (aunque deberían tenerla)
-            // Mostrar nada o dejar el query por defecto?
-            // Dejamos por defecto pero el stock calculation se encargará.
+        } else {
+            $query->whereRaw('0 = 1');
         }
 
         return $query;

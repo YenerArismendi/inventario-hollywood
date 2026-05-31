@@ -1,0 +1,2 @@
+nombre;unidad_compra;unidad_consumo;conversion;stock;bodega_id;ayuda_campos
+Aceite de Coco;litro;mililitros;1000;100;1;bodega_id = Número de ID de la Bodega (ej. 1)

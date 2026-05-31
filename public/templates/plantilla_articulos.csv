@@ -1,0 +1,2 @@
+nombre;presentation;unidad_medida;responsable;categoria;marca;proveedor;precio_venta;costo;descripcion;codigo_barras;is_preparacion;stock;bodega_id;ayuda_campos
+Shampoo Anticaspa;400ml;unidad;María López;Cuidado Personal;Head & Shoulders;Distribuidora XYZ;15000;8000;Frasco azul 400ml;7700000123456;0;50;1;is_preparacion = 1 (Sí) o 0 (No) | bodega_id = Número de ID de la Bodega (ej. 1)

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Actions\ImportArticlesAction;
 use App\Filament\Resources\ArticleResource\Pages;
 use App\Models\Article;
 use App\Models\Category;
@@ -207,6 +208,9 @@ class ArticleResource extends Resource
                     ->sortable(),
 
             ])
+            ->headerActions([
+                ImportArticlesAction::make(),
+            ])
             ->filters([
                 Tables\Filters\TrashedFilter::make(),
             ])
@@ -258,9 +262,6 @@ class ArticleResource extends Resource
         }
 
         $query = parent::getEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class, // 1. Le decimos a Filament que considere los artículos archivados
-            ])
             ->select('articles.*') // 2. Nos aseguramos de seleccionar todas las columnas de articles
             ->selectSub( // 3. Añadimos tu subconsulta para el stock total
                 $stockSubquery,

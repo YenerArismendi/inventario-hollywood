@@ -46,7 +46,7 @@ class CompraProductoResource extends Resource
                         Select::make('article_id')
                             ->label('Producto')
                             ->placeholder('Selecciona producto')
-                            ->options(fn () => Article::orderBy('nombre')->pluck('nombre', 'id'))
+                            ->options(fn () => Article::where('is_preparacion', false)->orderBy('nombre')->pluck('nombre', 'id'))
                             ->searchable()
                             ->required(),
 
